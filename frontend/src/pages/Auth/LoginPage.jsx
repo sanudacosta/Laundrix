@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, Zap, CheckCircle, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Zap, CheckCircle, AlertCircle, ArrowLeft, Check, X } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 
@@ -11,16 +11,36 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    rememberMe: false,
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailValid, setEmailValid] = useState(null);
+  const [shake, setShake] = useState(false);
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: newValue,
     });
+
+    // Real-time email validation
+    if (name === 'email') {
+      if (value.length > 0) {
+        setEmailValid(validateEmail(value));
+      } else {
+        setEmailValid(null);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -37,6 +57,8 @@ const LoginPage = () => {
       navigate(dashboardPath);
     } else {
       setError(result.message);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
       setLoading(false);
     }
   };
@@ -44,16 +66,28 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-20 xl:px-24 bg-white">
+      <div className="flex-1 flex items-start justify-center px-4 sm:px-6 lg:px-20 xl:px-24 bg-white animate-slide-in-left overflow-y-auto">
         <div className="max-w-md w-full py-12">
-          {/* Logo and Header */}
-          <div className="text-left mb-10">
-            <div className="flex items-center space-x-2 mb-10">
+          {/* Back to Home and Logo Row */}
+          <div className="flex items-center justify-between mb-10">
+         
+            <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-semibold text-gray-900">Laundrix</span>
             </div>
+               <Link
+              to="/"
+              className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Link>
+          </div>
+
+          {/* Header */}
+          <div className="text-left mb-10">
             <h2 className="text-3xl font-bold text-gray-900 mb-3">Welcome Back!</h2>
             <p className="text-gray-600 text-sm">
               Sign in to access your dashboard and continue optimizing your laundry process.
@@ -62,7 +96,7 @@ const LoginPage = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2 mb-6">
+            <div className={`bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2 mb-6 ${shake ? 'animate-shake' : ''}`}>
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{error}</span>
             </div>
@@ -70,18 +104,30 @@ const LoginPage = () => {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Input */}
-            <Input
-              label="Email"
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              icon={Mail}
-              required
-            />
+            {/* Email Input with Validation */}
+            <div className="relative">
+              <Input
+                label="Email"
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                icon={Mail}
+                required
+                className="pr-10"
+              />
+              {emailValid !== null && (
+                <div className="absolute right-3 top-[42px] pointer-events-none">
+                  {emailValid ? (
+                    <Check className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <X className="w-5 h-5 text-red-500" />
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Password Input */}
             <div>
@@ -98,8 +144,23 @@ const LoginPage = () => {
                 onRightIconClick={() => setShowPassword(!showPassword)}
                 required
               />
-              <div className="mt-2 text-right">
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+              <div className="mt-3 flex items-center justify-between">
+                {/* Remember Me */}
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                  />
+                  <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-600 cursor-pointer">
+                    Remember me
+                  </label>
+                </div>
+                {/* Forgot Password */}
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
                   Forgot Password?
                 </Link>
               </div>
@@ -182,8 +243,8 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Branding */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 items-center justify-center p-12">
-        <div className="max-w-md text-white">
+      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 items-start justify-center p-12 animate-fade-in overflow-y-auto">
+        <div className="max-w-md text-white my-12">
           <h2 className="text-4xl font-bold mb-8">
             Streamline Your Laundry & Suit Rental Operations
           </h2>

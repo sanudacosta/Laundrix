@@ -26,7 +26,7 @@ const Input = React.forwardRef(
           className={`
             relative flex items-center
             bg-gray-100 rounded-lg
-            transition-all
+            transition-all duration-200
             focus-within:bg-gray-200
             focus-within:ring-2 focus-within:ring-blue-500/40
             ${error ? 'ring-2 ring-red-500/40' : ''}
