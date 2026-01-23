@@ -11,7 +11,7 @@ import RegisterPage from './pages/Auth/RegisterPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 
 // Customer pages
-import CustomerDashboard from './pages/Customer/CustomerDashboard';
+import MyAccount from './pages/Customer/MyAccount';
 import PlaceOrder from './pages/Customer/PlaceOrder';
 import BrowseSuits from './pages/Customer/BrowseSuits';
 import MyOrders from './pages/Customer/MyOrders';
@@ -45,7 +45,7 @@ const AppRoutes = () => {
       case 'employee':
         return '/employee/dashboard';
       case 'customer':
-        return '/customer/dashboard';
+        return '/';
       default:
         return '/';
     }
@@ -67,10 +67,10 @@ const AppRoutes = () => {
 
       {/* Customer Routes */}
       <Route
-        path="/customer/dashboard"
+        path="/customer/account"
         element={
           <ProtectedRoute roles={['customer']}>
-            <CustomerDashboard />
+            <MyAccount />
           </ProtectedRoute>
         }
       />
