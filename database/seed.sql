@@ -1,111 +1,101 @@
--- Laundrix Database Seed Data
+-- Laundrix Database Seed Data (Sri Lankan Context)
 USE laundrix_db;
 
+-- Clear existing data (in correct order to avoid foreign key constraints)
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE order_status_history;
+TRUNCATE TABLE rental_status_history;
+TRUNCATE TABLE notifications;
+TRUNCATE TABLE payments;
+TRUNCATE TABLE suit_rentals;
+TRUNCATE TABLE laundry_orders;
+TRUNCATE TABLE suits;
+TRUNCATE TABLE suit_categories;
+TRUNCATE TABLE service_times;
+TRUNCATE TABLE cleaning_types;
+TRUNCATE TABLE users;
+TRUNCATE TABLE system_settings;
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- Seed Users (password for all: Password123!)
--- Password hash: $2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ
+-- Password hash for 'Password123!': $2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5
 INSERT INTO users (full_name, email, password, phone, role, address, is_active, email_verified) VALUES
-('Admin User', 'admin@laundrix.com', '$2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ', '+1234567890', 'admin', '123 Admin Street, City', TRUE, TRUE),
-('John Employee', 'john.emp@laundrix.com', '$2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ', '+1234567891', 'employee', '456 Employee Ave, City', TRUE, TRUE),
-('Sarah Employee', 'sarah.emp@laundrix.com', '$2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ', '+1234567892', 'employee', '789 Employee Blvd, City', TRUE, TRUE),
-('Mike Customer', 'mike@example.com', '$2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ', '+1234567893', 'customer', '321 Customer Lane, City', TRUE, TRUE),
-('Emily Customer', 'emily@example.com', '$2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ', '+1234567894', 'customer', '654 Customer Road, City', TRUE, TRUE),
-('David Customer', 'david@example.com', '$2a$10$XqK5K5S8ZvG.9V8xBxFxXuCvQJ6Q6Z8qGZF1E8qWqGY8xFxXuCvQJ', '+1234567895', 'customer', '987 Customer Court, City', TRUE, TRUE);
+('Admin User', 'admin@laundrix.lk', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234567', 'admin', '123 Galle Road, Colombo 03', TRUE, TRUE),
+('Kamal Employee', 'kamal@laundrix.lk', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234568', 'employee', '456 Duplication Road, Colombo 04', TRUE, TRUE),
+('Nisha Employee', 'nisha@laundrix.lk', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234569', 'employee', '789 Baseline Road, Colombo 09', TRUE, TRUE),
+('Roshan Silva', 'roshan@example.com', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234570', 'customer', '321 Ward Place, Colombo 07', TRUE, TRUE),
+('Thanuja Fernando', 'thanuja@example.com', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234571', 'customer', '654 Havelock Road, Colombo 05', TRUE, TRUE),
+('Sandun Perera', 'sandun@example.com', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234572', 'customer', '987 Bauddhaloka Mawatha, Colombo 04', TRUE, TRUE);
 
--- Seed Cleaning Types
+-- Seed Cleaning Types (LKR pricing)
 INSERT INTO cleaning_types (name, description, base_price, is_active) VALUES
-('Dry Clean', 'Professional dry cleaning service for delicate fabrics', 15.00, TRUE),
-('Wash & Iron', 'Regular wash with professional ironing', 10.00, TRUE),
-('Wash Only', 'Standard washing service', 8.00, TRUE),
-('Iron Only', 'Professional ironing service', 5.00, TRUE),
-('Steam Clean', 'Deep steam cleaning for heavy fabrics', 20.00, TRUE),
-('Stain Removal', 'Specialized stain removal treatment', 12.00, TRUE);
+('Dry Cleaning', 'Professional dry cleaning for delicate fabrics and formal wear', 800.00, TRUE),
+('Wash & Iron', 'Regular wash with professional ironing - shirts, pants, casual wear', 150.00, TRUE),
+('Wash & Fold', 'Standard washing and folding service for everyday clothes', 100.00, TRUE),
+('Ironing Only', 'Professional ironing service without washing', 80.00, TRUE),
+('Steam Cleaning', 'Deep steam cleaning for carpets, curtains, and heavy fabrics', 1200.00, TRUE),
+('Stain Removal', 'Specialized stain removal treatment with care', 600.00, TRUE);
 
--- Seed Service Times
+-- Seed Service Times (with multipliers)
 INSERT INTO service_times (name, description, duration_hours, price_multiplier, is_active) VALUES
-('Express', '4-6 hours express service', 6, 2.00, TRUE),
-('Same Day', 'Same day service (12 hours)', 12, 1.50, TRUE),
-('Standard', '2-3 days standard service', 48, 1.00, TRUE),
-('Economy', '4-5 days economy service', 96, 0.80, TRUE);
+('Express (6 hours)', 'Super-fast 6-hour service for urgent needs', 6, 2.00, TRUE),
+('Same Day (12 hours)', 'Same day service - drop off in morning, collect evening', 12, 1.50, TRUE),
+('Standard (48 hours)', 'Regular 2-day service with best value', 48, 1.00, TRUE),
+('Economy (96 hours)', '4-day economy service with discounted rates', 96, 0.80, TRUE);
 
 -- Seed Suit Categories
 INSERT INTO suit_categories (name, description, is_active) VALUES
-('Business Formal', 'Professional business suits', TRUE),
-('Wedding Suits', 'Elegant wedding and formal event suits', TRUE),
-('Tuxedos', 'Classic and modern tuxedos', TRUE),
-('Casual Blazers', 'Smart casual blazers and sport coats', TRUE),
-('Designer Suits', 'Premium designer brand suits', TRUE);
+('Business', 'Professional business suits for corporate settings', TRUE),
+('Wedding', 'Elegant suits for weddings and formal ceremonies', TRUE),
+('Formal', 'Classic formal wear including tuxedos', TRUE),
+('Casual', 'Smart casual blazers and modern fits', TRUE),
+('Premium', 'Designer and luxury brand suits', TRUE);
 
--- Seed Suits Inventory
-INSERT INTO suits (suit_code, category_id, name, description, size, color, brand, condition_status, rental_price_per_day, deposit_amount, purchase_price, is_available) VALUES
-('BS001', 1, 'Classic Navy Business Suit', 'Two-piece navy blue business suit', 'M', 'Navy Blue', 'Hugo Boss', 'excellent', 50.00, 200.00, 800.00, TRUE),
-('BS002', 1, 'Charcoal Gray Business Suit', 'Professional charcoal gray suit', 'L', 'Charcoal Gray', 'Calvin Klein', 'excellent', 45.00, 180.00, 750.00, TRUE),
-('BS003', 1, 'Black Business Suit', 'Classic black business suit', 'M', 'Black', 'Kenneth Cole', 'good', 40.00, 160.00, 650.00, TRUE),
-('WS001', 2, 'Ivory Wedding Suit', 'Elegant ivory three-piece wedding suit', 'L', 'Ivory', 'Vera Wang', 'excellent', 120.00, 500.00, 2000.00, TRUE),
-('WS002', 2, 'Light Gray Wedding Suit', 'Modern light gray wedding suit', 'M', 'Light Gray', 'Armani', 'excellent', 100.00, 450.00, 1800.00, TRUE),
-('TX001', 3, 'Classic Black Tuxedo', 'Traditional black tuxedo with satin lapels', 'M', 'Black', 'Ralph Lauren', 'excellent', 80.00, 350.00, 1500.00, TRUE),
-('TX002', 3, 'Modern Slim Fit Tuxedo', 'Contemporary slim fit tuxedo', 'S', 'Black', 'Ted Baker', 'good', 75.00, 320.00, 1400.00, TRUE),
-('CB001', 4, 'Navy Blazer', 'Smart casual navy blazer', 'L', 'Navy', 'Zara', 'excellent', 30.00, 120.00, 400.00, TRUE),
-('CB002', 4, 'Brown Tweed Blazer', 'Classic brown tweed sport coat', 'M', 'Brown', 'J.Crew', 'good', 35.00, 140.00, 450.00, TRUE),
-('DS001', 5, 'Designer Italian Suit', 'Premium Italian wool suit', 'L', 'Charcoal', 'Ermenegildo Zegna', 'excellent', 150.00, 600.00, 3000.00, TRUE),
-('DS002', 5, 'Designer Three-Piece Suit', 'Luxury three-piece suit', 'M', 'Navy', 'Tom Ford', 'excellent', 180.00, 700.00, 3500.00, TRUE);
+-- Seed 15 Suits with Sri Lankan pricing (LKR)
+INSERT INTO suits (suit_code, category_id, name, description, size, color, brand, condition_status, rental_price_per_day, deposit_amount, purchase_price, image_url, is_available) VALUES
+('HB-NV-001', 1, 'Hugo Boss Navy Suit', 'Elegant navy blue suit perfect for business meetings and formal events', '40R', 'Navy Blue', 'Hugo Boss', 'excellent', 8000.00, 10000.00, 75000.00, 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=500', TRUE),
+('AR-TX-002', 2, 'Armani Tuxedo', 'Premium tuxedo with satin lapels, perfect for weddings and black-tie events', '42R', 'Black', 'Giorgio Armani', 'excellent', 12000.00, 10000.00, 120000.00, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500', TRUE),
+('ZR-GY-003', 4, 'Zara Gray Suit', 'Contemporary slim fit design for modern occasions and smart casual events', '38R', 'Gray', 'Zara', 'excellent', 5000.00, 10000.00, 45000.00, 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?w=500', TRUE),
+('TB-BG-004', 2, 'Ted Baker Burgundy Suit', 'Luxurious velvet blazer in deep burgundy for special occasions', '40R', 'Burgundy', 'Ted Baker', 'excellent', 10000.00, 10000.00, 85000.00, 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=500', TRUE),
+('RL-BK-005', 3, 'Ralph Lauren Black Suit', 'Timeless black tuxedo for prom and formal events', '42L', 'Black', 'Ralph Lauren', 'excellent', 11000.00, 10000.00, 95000.00, 'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=500', TRUE),
+('MD-BG-006', 4, 'Massimo Dutti Beige Suit', 'Light summer suit perfect for daytime events and outdoor occasions', '38R', 'Beige', 'Massimo Dutti', 'good', 6000.00, 10000.00, 55000.00, 'https://images.unsplash.com/photo-1594938291221-94f18cbb5660?w=500', TRUE),
+('HK-CH-007', 2, 'Hackett Charcoal Three-Piece', 'Distinguished three-piece suit in charcoal for weddings', '40R', 'Charcoal', 'Hackett', 'excellent', 9000.00, 10000.00, 78000.00, 'https://images.unsplash.com/photo-1593252719532-6d69bb25be5d?w=500', TRUE),
+('CN-BL-008', 3, 'Canali Royal Blue Jacket', 'Bold royal blue dinner jacket for standout style at formal events', '42R', 'Royal Blue', 'Canali', 'excellent', 10500.00, 10000.00, 88000.00, 'https://images.unsplash.com/photo-1598808503491-c8e77b4e8fc9?w=500', TRUE),
+('BB-CR-009', 4, 'Brooks Brothers Cream Suit', 'Breathable linen suit for outdoor events and summer weddings', '40L', 'Cream', 'Brooks Brothers', 'good', 7000.00, 10000.00, 62000.00, 'https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=500', TRUE),
+('GH-NV-010', 5, 'Gieves & Hawkes Navy Three-Piece', 'Classic double-breasted style for power dressing and business', '42R', 'Navy', 'Gieves & Hawkes', 'excellent', 11500.00, 10000.00, 98000.00, 'https://images.unsplash.com/photo-1616091216791-a5360b5fc78a?w=500', TRUE),
+('BR-CK-011', 1, 'Burberry Check Suit', 'Sophisticated checkered pattern for style-conscious professionals', '38R', 'Brown Check', 'Burberry', 'excellent', 9500.00, 10000.00, 82000.00, 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?w=500', TRUE),
+('DG-GR-012', 5, 'Dolce & Gabbana Emerald Velvet', 'Luxurious emerald velvet for unforgettable entrances at parties', '40R', 'Emerald Green', 'Dolce & Gabbana', 'excellent', 13000.00, 10000.00, 115000.00, 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?w=500', TRUE),
+('PS-NV-013', 1, 'Paul Smith Pinstripe Suit', 'Classic pinstripe design for corporate settings and business meetings', '42R', 'Navy Pinstripe', 'Paul Smith', 'excellent', 8500.00, 10000.00, 72000.00, 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=500', TRUE),
+('TF-WH-014', 2, 'Tom Ford White Jacket', 'Stunning white dinner jacket for summer weddings and beach ceremonies', '40R', 'White', 'Tom Ford', 'excellent', 14000.00, 10000.00, 125000.00, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500', TRUE),
+('JC-GY-015', 4, 'J.Crew Ludlow Suit', 'Affordable and stylish suit perfect for graduation ceremonies', '38L', 'Gray', 'J.Crew', 'good', 5500.00, 10000.00, 48000.00, 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?w=500', TRUE);
 
--- Seed Laundry Orders
+-- Seed Sample Orders (with Colombo addresses)
 INSERT INTO laundry_orders (order_number, customer_id, cleaning_type_id, service_time_id, assigned_employee_id, item_description, quantity, weight_kg, special_instructions, order_type, status, subtotal, tax, total_amount, payment_status, pickup_date, delivery_date) VALUES
-('LO-2026-0001', 4, 1, 3, 2, '2 Shirts, 1 Pants, 1 Jacket', 4, 2.5, 'Handle with care', 'online', 'in-progress', 60.00, 4.80, 64.80, 'paid', '2026-01-10', '2026-01-13'),
-('LO-2026-0002', 5, 2, 2, 2, '5 Shirts, 3 Pants', 8, 3.0, 'No starch', 'walk-in', 'ready', 120.00, 9.60, 129.60, 'paid', '2026-01-11', '2026-01-12'),
-('LO-2026-0003', 6, 3, 4, NULL, '10 Casual Shirts', 10, 4.5, NULL, 'online', 'pending', 64.00, 5.12, 69.12, 'pending', '2026-01-12', '2026-01-17'),
-('LO-2026-0004', 4, 5, 1, 3, 'Large carpet', 1, 15.0, 'Heavy stains', 'walk-in', 'completed', 40.00, 3.20, 43.20, 'paid', '2026-01-09', '2026-01-10');
+('LO-2026-0001', 4, 2, 3, 2, '3 Shirts, 2 Pants, 1 Jacket', 6, 3.5, 'Please use hypoallergenic detergent', 'online', 'in-progress', 900.00, 72.00, 972.00, 'paid', '2026-01-20', '2026-01-22'),
+('LO-2026-0002', 5, 3, 2, 2, '10 Casual Shirts, 5 Pants', 15, 5.0, 'No starch please', 'walk-in', 'ready', 2250.00, 180.00, 2430.00, 'paid', '2026-01-21', '2026-01-22'),
+('LO-2026-0003', 6, 1, 4, NULL, '2 Suits for dry cleaning', 2, 2.0, 'Handle with care', 'online', 'pending', 1280.00, 102.40, 1382.40, 'pending', '2026-01-23', '2026-01-27');
 
--- Seed Suit Rentals
-INSERT INTO suit_rentals (rental_number, customer_id, suit_id, assigned_employee_id, rental_start_date, rental_end_date, rental_days, rental_amount, deposit_amount, late_fee, damage_fee, deposit_refunded, total_amount, payment_status, rental_status, return_condition, notes) VALUES
-('SR-2026-0001', 4, 6, 2, '2026-01-15', '2026-01-17', 3, 240.00, 350.00, 0, 0, 0, 590.00, 'paid', 'reserved', NULL, 'Wedding event'),
-('SR-2026-0002', 5, 1, 2, '2026-01-08', '2026-01-10', 2, 100.00, 200.00, 0, 0, 200.00, 100.00, 'fully-refunded', 'returned', 'excellent', 'Business meeting'),
-('SR-2026-0003', 6, 10, 3, '2026-01-20', '2026-01-25', 5, 750.00, 600.00, 0, 0, 0, 1350.00, 'paid', 'reserved', NULL, 'Corporate event');
+-- Seed Sample Rentals
+INSERT INTO suit_rentals (rental_number, customer_id, suit_id, assigned_employee_id, rental_start_date, rental_end_date, rental_days, rental_amount, deposit_amount, total_amount, payment_status, rental_status, notes) VALUES
+('SR-2026-0001', 4, 2, 2, '2026-01-28', '2026-01-30', 2, 24000.00, 10000.00, 34000.00, 'paid', 'reserved', 'Wedding ceremony'),
+('SR-2026-0002', 5, 1, 2, '2026-01-18', '2026-01-19', 1, 8000.00, 10000.00, 18000.00, 'fully-refunded', 'returned', 'Business conference');
 
 -- Seed Payments
-INSERT INTO payments (payment_number, user_id, order_id, rental_id, payment_type, payment_method, amount, transaction_id, payment_status, payment_date) VALUES
-('PAY-2026-0001', 4, 1, NULL, 'laundry', 'online', 64.80, 'TXN-1234567890', 'completed', '2026-01-10 10:30:00'),
-('PAY-2026-0002', 5, 2, NULL, 'laundry', 'cash', 129.60, NULL, 'completed', '2026-01-11 14:20:00'),
-('PAY-2026-0003', 4, 4, NULL, 'laundry', 'card', 43.20, 'TXN-1234567891', 'completed', '2026-01-09 16:45:00'),
-('PAY-2026-0004', 4, NULL, 1, 'rental', 'online', 590.00, 'TXN-1234567892', 'completed', '2026-01-12 09:15:00'),
-('PAY-2026-0005', 5, NULL, 2, 'rental', 'card', 100.00, 'TXN-1234567893', 'completed', '2026-01-08 11:00:00'),
-('PAY-2026-0006', 5, NULL, 2, 'deposit', 'card', 200.00, 'TXN-1234567894', 'refunded', '2026-01-10 15:30:00'),
-('PAY-2026-0007', 6, NULL, 3, 'rental', 'online', 1350.00, 'TXN-1234567895', 'completed', '2026-01-13 13:20:00');
+INSERT INTO payments (payment_number, user_id, order_id, rental_id, payment_type, payment_method, amount, payment_status, payment_date) VALUES
+('PAY-2026-0001', 4, 1, NULL, 'laundry', 'online', 972.00, 'completed', '2026-01-20 10:30:00'),
+('PAY-2026-0002', 5, 2, NULL, 'laundry', 'cash', 2430.00, 'completed', '2026-01-21 14:20:00'),
+('PAY-2026-0003', 4, NULL, 1, 'rental', 'online', 34000.00, 'completed', '2026-01-23 09:15:00'),
+('PAY-2026-0004', 5, NULL, 2, 'rental', 'online', 18000.00, 'completed', '2026-01-18 11:00:00'),
+('PAY-2026-0005', 5, NULL, 2, 'deposit', 'online', 10000.00, 'refunded', '2026-01-19 16:30:00');
 
--- Seed Notifications
-INSERT INTO notifications (user_id, type, title, message, is_read, send_email, email_sent, send_sms, sms_sent, related_order_id, related_rental_id) VALUES
-(4, 'order', 'Order In Progress', 'Your laundry order LO-2026-0001 is now being processed.', TRUE, TRUE, TRUE, FALSE, FALSE, 1, NULL),
-(5, 'order', 'Order Ready', 'Your laundry order LO-2026-0002 is ready for pickup!', FALSE, TRUE, TRUE, TRUE, TRUE, 2, NULL),
-(4, 'rental', 'Rental Confirmed', 'Your suit rental SR-2026-0001 has been confirmed.', TRUE, TRUE, TRUE, FALSE, FALSE, NULL, 1),
-(6, 'reminder', 'Pickup Reminder', 'Reminder: Your order LO-2026-0003 pickup date is approaching.', FALSE, TRUE, FALSE, FALSE, FALSE, 3, NULL);
-
--- Seed Order Status History
-INSERT INTO order_status_history (order_id, status, changed_by, notes) VALUES
-(1, 'pending', 4, 'Order placed online'),
-(1, 'in-progress', 2, 'Assigned to John Employee'),
-(2, 'pending', 5, 'Walk-in order'),
-(2, 'in-progress', 2, 'Started processing'),
-(2, 'ready', 2, 'Completed and ready for pickup'),
-(4, 'pending', 4, 'Walk-in order'),
-(4, 'in-progress', 3, 'Started cleaning'),
-(4, 'completed', 3, 'Delivered to customer');
-
--- Seed Rental Status History
-INSERT INTO rental_status_history (rental_id, status, changed_by, notes) VALUES
-(1, 'reserved', 4, 'Rental booked online'),
-(2, 'reserved', 5, 'Rental booked'),
-(2, 'active', 2, 'Suit picked up'),
-(2, 'returned', 5, 'Suit returned in excellent condition'),
-(3, 'reserved', 6, 'Rental booked online');
-
--- Seed System Settings
+-- Seed System Settings (LKR currency)
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('tax_rate', '0.08', 'Tax rate percentage (8%)'),
-('late_fee_per_day', '20.00', 'Late fee charged per day for overdue rentals'),
-('currency', 'USD', 'System currency'),
+('late_fee_per_day', '1000', 'Late fee charged per day for overdue suit rentals (LKR)'),
+('currency', 'LKR', 'System currency - Sri Lankan Rupees'),
 ('business_name', 'Laundrix', 'Business name'),
-('business_email', 'info@laundrix.com', 'Business contact email'),
-('business_phone', '+1234567890', 'Business contact phone'),
+('business_email', 'info@laundrix.lk', 'Business contact email'),
+('business_phone', '+94112345678', 'Business contact phone'),
 ('min_rental_days', '1', 'Minimum rental days allowed'),
 ('max_rental_days', '30', 'Maximum rental days allowed'),
 ('notification_email_enabled', 'true', 'Enable email notifications'),

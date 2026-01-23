@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getDashboardStats,
+  getCustomerDashboardStats,
   getRevenueReport,
   getInventoryReport,
   getOrderStatistics,
@@ -10,13 +11,14 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require admin authorization
-router.use(authenticate, authorize('admin'));
+// Customer dashboard (authenticated only)
+router.get('/dashboard', authenticate, getCustomerDashboardStats);
 
-router.get('/dashboard', getDashboardStats);
-router.get('/revenue', getRevenueReport);
-router.get('/inventory', getInventoryReport);
-router.get('/orders', getOrderStatistics);
-router.get('/rentals', getRentalStatistics);
+// Admin-only routes
+router.get('/admin/dashboard', authenticate, authorize('admin'), getDashboardStats);
+router.get('/revenue', authenticate, authorize('admin'), getRevenueReport);
+router.get('/inventory', authenticate, authorize('admin'), getInventoryReport);
+router.get('/orders', authenticate, authorize('admin'), getOrderStatistics);
+router.get('/rentals', authenticate, authorize('admin'), getRentalStatistics);
 
 export default router;

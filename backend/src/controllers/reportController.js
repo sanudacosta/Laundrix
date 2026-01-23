@@ -1,6 +1,54 @@
 import db from '../config/database.js';
 import { AppError } from '../middleware/errorHandler.js';
 
+// Get customer dashboard statistics
+export const getCustomerDashboardStats = async (req, res, next) => {
+  try {
+    const customerId = req.user.userId;
+    
+    // If admin, return admin stats
+    if (req.user.role === 'admin') {
+      return getDashboardStats(req, res, next);
+    }
+    
+    // Active orders count
+    const [activeOrders] = await db.query(
+      'SELECT COUNT(*) as count FROM laundry_orders WHERE customer_id = ? AND status NOT IN (?, ?)',
+      [customerId, 'completed', 'cancelled']
+    );
+    
+    // Pending payments count
+    const [pendingPayments] = await db.query(
+      'SELECT COUNT(*) as count FROM payments WHERE user_id = ? AND payment_status = ?',
+      [customerId, 'pending']
+    );
+    
+    // Upcoming rentals count
+    const [upcomingRentals] = await db.query(
+      'SELECT COUNT(*) as count FROM suit_rentals WHERE customer_id = ? AND rental_status IN (?, ?)',
+      [customerId, 'reserved', 'active']
+    );
+    
+    // Total spent
+    const [totalSpent] = await db.query(
+      'SELECT SUM(amount) as total FROM payments WHERE user_id = ? AND payment_status = ?',
+      [customerId, 'completed']
+    );
+    
+    res.json({
+      success: true,
+      data: {
+        activeOrders: activeOrders[0].count,
+        pendingPayments: pendingPayments[0].count,
+        upcomingRentals: upcomingRentals[0].count,
+        totalSpent: totalSpent[0].total || 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get dashboard statistics (admin)
 export const getDashboardStats = async (req, res, next) => {
   try {
@@ -346,6 +394,7 @@ export const getRentalStatistics = async (req, res, next) => {
 
 export default {
   getDashboardStats,
+  getCustomerDashboardStats,
   getRevenueReport,
   getInventoryReport,
   getOrderStatistics,
