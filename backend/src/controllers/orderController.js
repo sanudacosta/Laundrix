@@ -317,6 +317,40 @@ export const deleteOrder = async (req, res, next) => {
   }
 };
 
+// Get cleaning types (public/authenticated)
+export const getCleaningTypes = async (req, res, next) => {
+  try {
+    const [cleaningTypes] = await db.query(
+      'SELECT * FROM cleaning_types WHERE is_active = TRUE ORDER BY name'
+    );
+    
+    res.json({
+      success: true,
+      count: cleaningTypes.length,
+      data: cleaningTypes
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get service times (public/authenticated)
+export const getServiceTimes = async (req, res, next) => {
+  try {
+    const [serviceTimes] = await db.query(
+      'SELECT * FROM service_times WHERE is_active = TRUE ORDER BY duration_hours'
+    );
+    
+    res.json({
+      success: true,
+      count: serviceTimes.length,
+      data: serviceTimes
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getAllOrders,
   getMyOrders,
@@ -325,5 +359,7 @@ export default {
   updateOrderStatus,
   assignOrder,
   getAssignedOrders,
-  deleteOrder
+  deleteOrder,
+  getCleaningTypes,
+  getServiceTimes
 };

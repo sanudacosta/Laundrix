@@ -19,6 +19,9 @@ export const orderAPI = {
   assignOrder: (id, data) => api.put(`/orders/${id}/assign`, data),
   getAssignedOrders: () => api.get('/orders/assigned'),
   deleteOrder: (id) => api.delete(`/orders/${id}`),
+  // Public endpoints for order placement
+  getCleaningTypes: () => api.get('/orders/cleaning-types'),
+  getServiceTimes: () => api.get('/orders/service-times'),
 };
 
 // Rental APIs

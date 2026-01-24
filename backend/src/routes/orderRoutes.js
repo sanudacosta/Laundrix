@@ -7,12 +7,18 @@ import {
   updateOrderStatus,
   assignOrder,
   getAssignedOrders,
-  deleteOrder
+  deleteOrder,
+  getCleaningTypes,
+  getServiceTimes
 } from '../controllers/orderController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { validateLaundryOrder, validate } from '../middleware/validators.js';
 
 const router = express.Router();
+
+// Public/authenticated routes for order placement
+router.get('/cleaning-types', authenticate, getCleaningTypes);
+router.get('/service-times', authenticate, getServiceTimes);
 
 // Customer routes
 router.get('/my-orders', authenticate, authorize('customer'), getMyOrders);

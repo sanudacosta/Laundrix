@@ -160,13 +160,13 @@ const MyAccount = () => {
                   </label>
                   <textarea
                     name="address"
-                    value={formData.address}
+                    value={formData.address || ''}
                     onChange={handleChange}
                     disabled={!editing}
                     rows={3}
-                    placeholder={editing ? "Enter your full address with city and postal code" : ""}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                      !editing ? 'bg-gray-50 cursor-not-allowed' : ''
+                    placeholder={editing ? "Enter your full address with city and postal code" : "No address provided"}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none min-h-[80px] ${
+                      !editing ? 'bg-gray-50 cursor-not-allowed text-gray-700' : ''
                     }`}
                   />
                 </div>
