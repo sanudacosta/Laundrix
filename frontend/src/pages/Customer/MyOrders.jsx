@@ -105,7 +105,7 @@ const MyOrders = () => {
         </div>
 
         {/* Filter Tabs */}
-        <div className="mb-6 flex space-x-2 bg-white rounded-lg p-1 shadow-sm border border-gray-100 inline-flex">
+        <div className="mb-6 inline-flex space-x-2 bg-white rounded-lg p-1 shadow-sm border border-gray-100">
           {[
             { key: 'all', label: 'All Orders', count: orders.length },
             { key: 'active', label: 'Active', count: orders.filter(o => !['Completed', 'Cancelled'].includes(o.status)).length },

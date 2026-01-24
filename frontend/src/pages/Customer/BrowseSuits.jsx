@@ -43,10 +43,10 @@ const BrowseSuits = () => {
 
   const filteredSuits = (Array.isArray(suits) ? suits : []).filter(suit => {
     const matchesSearch = suit.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         suit.category?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || suit.category === selectedCategory;
-    const matchesPrice = suit.rental_price >= priceRange[0] && suit.rental_price <= priceRange[1];
-    const isAvailable = suit.status === 'Available';
+                         suit.category_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || suit.category_name === selectedCategory;
+    const matchesPrice = suit.rental_price_per_day >= priceRange[0] && suit.rental_price_per_day <= priceRange[1];
+    const isAvailable = suit.is_available === true || suit.is_available === 1;
     
     return matchesSearch && matchesCategory && matchesPrice && isAvailable;
   });
@@ -62,7 +62,7 @@ const BrowseSuits = () => {
   const calculateTotal = () => {
     if (!selectedSuit) return { rental: 0, deposit: 0, total: 0 };
     const days = calculateDuration();
-    const rental = selectedSuit.rental_price * days;
+    const rental = selectedSuit.rental_price_per_day * days;
     const deposit = 10000; // Fixed deposit
     return {
       rental: rental.toFixed(2),
@@ -238,14 +238,14 @@ const BrowseSuits = () => {
                     </span>
                   </div>
                   
-                  <p className="text-gray-600 mb-2">{suit.category}</p>
+                  <p className="text-gray-600 mb-2">{suit.category_name}</p>
                   <p className="text-sm text-gray-500 mb-4">Size: {suit.size}</p>
                   
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-500">Per day</p>
                       <p className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(suit.rental_price)}
+                        {formatCurrency(suit.rental_price_per_day)}
                       </p>
                     </div>
                     <button
@@ -298,7 +298,7 @@ const BrowseSuits = () => {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-500 mb-1">Category</h3>
-                  <p className="text-lg text-gray-900">{selectedSuit.category}</p>
+                  <p className="text-lg text-gray-900">{selectedSuit.category_name}</p>
                 </div>
 
                 <div>
@@ -309,7 +309,7 @@ const BrowseSuits = () => {
                 <div>
                   <h3 className="text-sm font-semibold text-gray-500 mb-1">Rental Price</h3>
                   <p className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(selectedSuit.rental_price)} <span className="text-sm text-gray-500">/ day</span>
+                    {formatCurrency(selectedSuit.rental_price_per_day)} <span className="text-sm text-gray-500">/ day</span>
                   </p>
                 </div>
 

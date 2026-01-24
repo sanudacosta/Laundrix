@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Menu, X, ChevronDown, User, LogOut, Package, Shirt, CreditCard } from 'lucide-react';
+import { Zap, Menu, X, ChevronDown, User, LogOut, Package, Shirt, CreditCard, ShoppingBag } from 'lucide-react';
 import Button from './ui/Button';
 
 const Navbar = () => {
@@ -84,7 +84,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -95,10 +95,30 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
+            
+            {/* Quick Action Links for authenticated customers */}
+            {isAuthenticated && user?.role === 'customer' && (
+              <>
+                <Link
+                  to="/customer/place-order"
+                  className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Place Order</span>
+                </Link>
+                <Link
+                  to="/customer/browse-suits"
+                  className="flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <Shirt className="w-4 h-4" />
+                  <span>Rent Suits</span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-4">
             {!isAuthenticated ? (
               <>
                 <Link
@@ -201,7 +221,7 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
           >
             {mobileMenuOpen ? (
               <X className="w-6 h-6" />
@@ -214,7 +234,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 shadow-xl animate-slide-in-bottom">
+        <div className="lg:hidden bg-white border-t border-gray-200 shadow-xl animate-slide-in-bottom">
           <div className="px-4 py-6 space-y-4">
             {navLinks.map((link) => (
               <a
@@ -229,6 +249,29 @@ const Navbar = () => {
                 {link.name}
               </a>
             ))}
+
+            {/* Mobile Quick Actions for customers */}
+            {isAuthenticated && user?.role === 'customer' && (
+              <>
+                <hr className="border-gray-200 my-3" />
+                <Link
+                  to="/customer/place-order"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>Place Laundry Order</span>
+                </Link>
+                <Link
+                  to="/customer/browse-suits"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  <Shirt className="w-5 h-5" />
+                  <span>Rent Suits</span>
+                </Link>
+              </>
+            )}
             <hr className="border-gray-200" />
             {!isAuthenticated ? (
               <div className="space-y-3">
