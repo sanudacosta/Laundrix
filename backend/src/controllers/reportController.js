@@ -19,7 +19,7 @@ export const getCustomerDashboardStats = async (req, res, next) => {
     
     // Pending payments count
     const [pendingPayments] = await db.query(
-      'SELECT COUNT(*) as count FROM payments WHERE user_id = ? AND payment_status = ?',
+      'SELECT COUNT(*) as count FROM payments WHERE customer_id = ? AND payment_status = ?',
       [customerId, 'pending']
     );
     
@@ -31,7 +31,7 @@ export const getCustomerDashboardStats = async (req, res, next) => {
     
     // Total spent
     const [totalSpent] = await db.query(
-      'SELECT SUM(amount) as total FROM payments WHERE user_id = ? AND payment_status = ?',
+      'SELECT SUM(amount) as total FROM payments WHERE customer_id = ? AND payment_status = ?',
       [customerId, 'completed']
     );
     
@@ -81,10 +81,11 @@ export const getDashboardStats = async (req, res, next) => {
     
     const [recentRentals] = await db.query(
       `SELECT sr.id, sr.rental_number, sr.rental_status, sr.total_amount, sr.created_at,
-              u.full_name as customer_name, s.name as suit_name
+              u.full_name as customer_name, sp.name as suit_name
        FROM suit_rentals sr
        JOIN users u ON sr.customer_id = u.id
-       JOIN suits s ON sr.suit_id = s.id
+       JOIN suit_inventory si ON sr.inventory_id = si.id
+       JOIN suit_products sp ON si.product_id = sp.id
        ORDER BY sr.created_at DESC
        LIMIT 5`
     );
@@ -135,7 +136,11 @@ export const getRevenueReport = async (req, res, next) => {
     let query = `
       SELECT 
         DATE_FORMAT(payment_date, ?) as period,
-        payment_type,
+        CASE 
+          WHEN order_id IS NOT NULL THEN 'laundry'
+          WHEN rental_id IS NOT NULL THEN 'rental'
+          ELSE 'other'
+        END as payment_type,
         COUNT(*) as transaction_count,
         SUM(amount) as total_amount
       FROM payments
@@ -161,7 +166,11 @@ export const getRevenueReport = async (req, res, next) => {
     // Summary
     const [summary] = await db.query(
       `SELECT 
-         payment_type,
+         CASE 
+           WHEN order_id IS NOT NULL THEN 'laundry'
+           WHEN rental_id IS NOT NULL THEN 'rental'
+           ELSE 'other'
+         END as payment_type,
          COUNT(*) as count,
          SUM(amount) as total
        FROM payments
@@ -192,7 +201,7 @@ export const getInventoryReport = async (req, res, next) => {
       `SELECT 
          is_available,
          COUNT(*) as count
-       FROM suits
+       FROM suit_inventory
        GROUP BY is_available`
     );
     
@@ -200,10 +209,12 @@ export const getInventoryReport = async (req, res, next) => {
     const [categories] = await db.query(
       `SELECT 
          sc.name as category,
-         COUNT(s.id) as total_suits,
-         SUM(CASE WHEN s.is_available = TRUE THEN 1 ELSE 0 END) as available_suits
+         COUNT(DISTINCT si.product_id) as total_products,
+         COUNT(si.id) as total_units,
+         SUM(CASE WHEN si.is_available = TRUE THEN 1 ELSE 0 END) as available_units
        FROM suit_categories sc
-       LEFT JOIN suits s ON sc.id = s.category_id
+       LEFT JOIN suit_products sp ON sc.id = sp.category_id
+       LEFT JOIN suit_inventory si ON sp.id = si.product_id
        GROUP BY sc.id, sc.name`
     );
     
@@ -212,34 +223,40 @@ export const getInventoryReport = async (req, res, next) => {
       `SELECT 
          condition_status,
          COUNT(*) as count
-       FROM suits
+       FROM suit_inventory
        GROUP BY condition_status`
     );
     
-    // Most rented suits
+    // Most rented products
     const [topRented] = await db.query(
       `SELECT 
-         s.id, s.name, s.suit_code, s.total_rentals,
+         sp.id, sp.name, sp.brand, sp.color,
          sc.name as category,
-         COUNT(sr.id) as active_rentals
-       FROM suits s
-       JOIN suit_categories sc ON s.category_id = sc.id
-       LEFT JOIN suit_rentals sr ON s.id = sr.suit_id AND sr.rental_status IN ('reserved', 'active')
-       GROUP BY s.id
-       ORDER BY s.total_rentals DESC
+         SUM(si.total_rentals) as total_rentals,
+         COUNT(DISTINCT sr.id) as active_rentals
+       FROM suit_products sp
+       JOIN suit_categories sc ON sp.category_id = sc.id
+       JOIN suit_inventory si ON sp.id = si.product_id
+       LEFT JOIN suit_rentals sr ON si.id = sr.inventory_id AND sr.rental_status IN ('reserved', 'active')
+       GROUP BY sp.id
+       ORDER BY total_rentals DESC
        LIMIT 10`
     );
     
-    // Low activity suits (slow-moving)
+    // Low activity products (slow-moving)
     const [lowActivity] = await db.query(
       `SELECT 
-         s.id, s.name, s.suit_code, s.total_rentals, s.last_rented_date,
+         sp.id, sp.name, sp.brand, sp.color,
          sc.name as category,
-         DATEDIFF(NOW(), COALESCE(s.last_rented_date, s.created_at)) as days_since_last_rental
-       FROM suits s
-       JOIN suit_categories sc ON s.category_id = sc.id
-       WHERE s.is_available = TRUE
-       ORDER BY s.total_rentals ASC, days_since_last_rental DESC
+         SUM(si.total_rentals) as total_rentals,
+         MAX(si.last_rented_date) as last_rented_date,
+         DATEDIFF(NOW(), COALESCE(MAX(si.last_rented_date), sp.created_at)) as days_since_last_rental
+       FROM suit_products sp
+       JOIN suit_categories sc ON sp.category_id = sc.id
+       JOIN suit_inventory si ON sp.id = si.product_id
+       WHERE si.is_available = TRUE AND sp.is_active = TRUE
+       GROUP BY sp.id
+       ORDER BY total_rentals ASC, days_since_last_rental DESC
        LIMIT 10`
     );
     
@@ -365,10 +382,12 @@ export const getRentalStatistics = async (req, res, next) => {
     
     // Overdue rentals
     const [overdueRentals] = await db.query(
-      `SELECT sr.*, u.full_name as customer_name, u.phone as customer_phone, s.name as suit_name
+      `SELECT sr.*, u.full_name as customer_name, u.phone as customer_phone, 
+              sp.name as suit_name, sp.brand as suit_brand, sp.color as suit_color
        FROM suit_rentals sr
        JOIN users u ON sr.customer_id = u.id
-       JOIN suits s ON sr.suit_id = s.id
+       JOIN suit_inventory si ON sr.inventory_id = si.id
+       JOIN suit_products sp ON si.product_id = sp.id
        WHERE sr.rental_status = 'active' AND sr.rental_end_date < NOW()
        ORDER BY sr.rental_end_date ASC`
     );

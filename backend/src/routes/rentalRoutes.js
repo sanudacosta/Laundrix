@@ -10,6 +10,7 @@ import {
   clearCart,
   checkout,
   createRental,
+  getAllRentals,
   getMyRentals,
   getCategories
 } from '../controllers/rentalController.js';
@@ -34,5 +35,8 @@ router.post('/cart/checkout', authenticate, authorize('customer'), checkout);
 // Rental routes (customer only)
 router.post('/rentals', authenticate, authorize('customer'), createRental);
 router.get('/my-rentals', authenticate, authorize('customer'), getMyRentals);
+
+// Admin routes
+router.get('/rentals', authenticate, authorize('admin', 'employee'), getAllRentals);
 
 export default router;

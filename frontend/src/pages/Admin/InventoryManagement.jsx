@@ -14,7 +14,8 @@ import {
   message,
   Tabs,
   Image,
-  Popconfirm
+  Popconfirm,
+  Tooltip
 } from 'antd';
 import { 
   ShoppingOutlined,
@@ -260,7 +261,7 @@ const InventoryManagement = () => {
             border: 'none',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
           }}
-          bodyStyle={{ padding: '32px' }}
+          styles={{ body: { padding: '32px' } }}
         >
           <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>

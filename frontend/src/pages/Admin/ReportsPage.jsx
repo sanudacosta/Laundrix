@@ -96,30 +96,36 @@ const ReportsPage = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-  // Mock data for charts (replace with actual API data)
-  const revenueChartData = [
-    { month: 'Jan', orders: 45000, rentals: 98000, total: 143000 },
-    { month: 'Feb', orders: 52000, rentals: 112000, total: 164000 },
-    { month: 'Mar', orders: 48000, rentals: 105000, total: 153000 },
-    { month: 'Apr', orders: 61000, rentals: 125000, total: 186000 },
-    { month: 'May', orders: 55000, rentals: 118000, total: 173000 },
-    { month: 'Jun', orders: 67000, rentals: 142000, total: 209000 },
-  ];
+  // Process revenue data for charts
+  const revenueChartData = revenueData?.details?.reduce((acc, item) => {
+    const existing = acc.find(x => x.period === item.period);
+    if (existing) {
+      if (item.payment_type === 'laundry') existing.orders = item.total_amount;
+      if (item.payment_type === 'rental') existing.rentals = item.total_amount;
+    } else {
+      acc.push({
+        month: item.period,
+        orders: item.payment_type === 'laundry' ? item.total_amount : 0,
+        rentals: item.payment_type === 'rental' ? item.total_amount : 0,
+      });
+    }
+    return acc;
+  }, []) || [];
 
-  const categoryData = [
-    { name: 'Wedding Suits', value: 35, count: 42 },
-    { name: 'Business Suits', value: 28, count: 34 },
-    { name: 'Formal Wear', value: 22, count: 26 },
-    { name: 'Casual', value: 15, count: 18 },
-  ];
+  // Process inventory data for category distribution
+  const categoryData = inventoryData?.categories?.map(cat => ({
+    name: cat.category,
+    value: cat.available_units || 0,
+    count: cat.total_units || 0
+  })) || [];
 
-  const topSuits = [
-    { rank: 1, name: 'Armani Tuxedo', rentals: 45, revenue: 135000 },
-    { rank: 2, name: 'Hugo Boss Navy', rentals: 38, revenue: 106400 },
-    { rank: 3, name: 'Tom Ford White', rentals: 32, revenue: 96000 },
-    { rank: 4, name: 'Ralph Lauren Black', rentals: 28, revenue: 81200 },
-    { rank: 5, name: 'Burberry Check', rentals: 24, revenue: 62400 },
-  ];
+  // Process top performing suits
+  const topSuits = inventoryData?.fastMoving?.map((suit, index) => ({
+    rank: index + 1,
+    name: `${suit.brand} ${suit.name} (${suit.color})`,
+    rentals: suit.total_rentals || 0,
+    revenue: suit.total_rentals * 3000 || 0 // Estimate
+  })) || [];
 
   const topSuitsColumns = [
     {
@@ -174,52 +180,52 @@ const ReportsPage = () => {
             <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
                 title="Total Revenue"
-                value={352000}
+                value={dashboardStats?.revenue?.total || 0}
                 prefix="LKR"
                 valueStyle={{ color: '#52c41a', fontWeight: '700', fontSize: '28px' }}
                 suffix={<RiseOutlined />}
               />
               <div style={{ fontSize: '13px', color: '#52c41a', marginTop: 8, fontWeight: '500' }}>
-                +12.5% from last month
+                Monthly: LKR {dashboardStats?.revenue?.monthly?.toLocaleString() || 0}
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
-                title="Laundry Orders"
-                value={128}
+                title="Total Orders"
+                value={dashboardStats?.counts?.orders || 0}
                 prefix={<ShoppingOutlined />}
                 valueStyle={{ color: '#667eea', fontWeight: '700', fontSize: '28px' }}
               />
               <div style={{ fontSize: '13px', color: '#667eea', marginTop: 8, fontWeight: '500' }}>
-                +8.2% from last month
+                Active: {dashboardStats?.counts?.activeOrders || 0}
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
-                title="Suit Rentals"
-                value={67}
+                title="Total Rentals"
+                value={dashboardStats?.counts?.rentals || 0}
                 prefix={<ShoppingOutlined />}
                 valueStyle={{ color: '#f093fb', fontWeight: '700', fontSize: '28px' }}
               />
               <div style={{ fontSize: '13px', color: '#f093fb', marginTop: 8, fontWeight: '500' }}>
-                +15.3% from last month
+                Active: {dashboardStats?.counts?.activeRentals || 0}
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
-                title="Avg Order Value"
-                value={2750}
-                prefix="LKR"
+                title="Total Customers"
+                value={dashboardStats?.counts?.customers || 0}
+                prefix={<DollarOutlined />}
                 valueStyle={{ color: '#fa709a', fontWeight: '700', fontSize: '28px' }}
               />
               <div style={{ fontSize: '13px', color: '#fa709a', marginTop: 8, fontWeight: '500' }}>
-                +3.1% from last month
+                Employees: {dashboardStats?.counts?.employees || 0}
               </div>
             </Card>
           </Col>
@@ -234,7 +240,7 @@ const ReportsPage = () => {
             border: 'none',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
           }}
-          bodyStyle={{ padding: '24px' }}
+          styles={{ body: { padding: '24px' } }}
           extra={
             <Space>
               <Select defaultValue="6months" style={{ width: 150 }}>
@@ -272,7 +278,7 @@ const ReportsPage = () => {
                 border: 'none',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
               }}
-              bodyStyle={{ padding: '24px' }}
+              styles={{ body: { padding: '24px' } }}
             >
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -305,7 +311,7 @@ const ReportsPage = () => {
                 border: 'none',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
               }}
-              bodyStyle={{ padding: '24px' }}
+              styles={{ body: { padding: '24px' } }}
             >
               <Table
                 columns={topSuitsColumns}

@@ -492,6 +492,54 @@ export const createRental = async (req, res, next) => {
   }
 };
 
+// Get all rentals (admin)
+export const getAllRentals = async (req, res, next) => {
+  try {
+    const { rental_status, payment_status } = req.query;
+    
+    let query = `
+      SELECT 
+        sr.*,
+        u.full_name as customer_name,
+        u.email as customer_email,
+        u.phone as customer_phone,
+        sp.name as suit_name, sp.brand as suit_brand, sp.color as suit_color, sp.image_url as suit_image,
+        si.size, si.suit_code,
+        sc.name as category_name
+      FROM suit_rentals sr
+      JOIN users u ON sr.customer_id = u.id
+      JOIN suit_inventory si ON sr.inventory_id = si.id
+      JOIN suit_products sp ON si.product_id = sp.id
+      JOIN suit_categories sc ON sp.category_id = sc.id
+      WHERE 1=1
+    `;
+    
+    const params = [];
+    
+    if (rental_status) {
+      query += ' AND sr.rental_status = ?';
+      params.push(rental_status);
+    }
+    
+    if (payment_status) {
+      query += ' AND sr.payment_status = ?';
+      params.push(payment_status);
+    }
+    
+    query += ' ORDER BY sr.created_at DESC';
+    
+    const [rentals] = await db.query(query, params);
+    
+    res.json({
+      success: true,
+      count: rentals.length,
+      data: rentals
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get my rentals
 export const getMyRentals = async (req, res, next) => {
   try {
@@ -549,6 +597,7 @@ export default {
   clearCart,
   checkout,
   createRental,
+  getAllRentals,
   getMyRentals,
   getCategories
 };

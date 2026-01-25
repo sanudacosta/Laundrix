@@ -13,10 +13,12 @@ const router = express.Router();
 // Customer routes
 router.post('/', authenticate, createPayment);
 router.get('/my-payments', authenticate, authorize('customer'), getMyPayments);
-router.get('/:id', authenticate, getPaymentById);
 
-// Admin routes
+// Admin routes - must come before /:id route
 router.get('/', authenticate, authorize('admin'), getAllPayments);
 router.post('/:id/refund', authenticate, authorize('admin'), createRefund);
+
+// Shared routes - parameterized routes must come last
+router.get('/:id', authenticate, getPaymentById);
 
 export default router;

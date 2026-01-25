@@ -42,10 +42,10 @@ export const createPayment = async (req, res, next) => {
     // Save payment to database
     const [result] = await db.query(
       `INSERT INTO payments 
-       (payment_number, user_id, order_id, rental_id, payment_type, payment_method, 
-        amount, transaction_id, payment_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [paymentNumber, userId, order_id, rental_id, payment_type, payment_method,
+       (payment_number, customer_id, order_id, rental_id, payment_method, 
+        amount, transaction_reference, payment_status, payment_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [paymentNumber, userId, order_id, rental_id, payment_method,
        amount, paymentResult.transactionId, 'completed']
     );
     
@@ -91,7 +91,7 @@ export const getMyPayments = async (req, res, next) => {
        FROM payments p
        LEFT JOIN laundry_orders lo ON p.order_id = lo.id
        LEFT JOIN suit_rentals sr ON p.rental_id = sr.id
-       WHERE p.user_id = ?
+       WHERE p.customer_id = ?
        ORDER BY p.created_at DESC`,
       [userId]
     );
@@ -115,7 +115,7 @@ export const getAllPayments = async (req, res, next) => {
       SELECT p.*, u.full_name as customer_name, u.email as customer_email,
              lo.order_number, sr.rental_number
       FROM payments p
-      JOIN users u ON p.user_id = u.id
+      JOIN users u ON p.customer_id = u.id
       LEFT JOIN laundry_orders lo ON p.order_id = lo.id
       LEFT JOIN suit_rentals sr ON p.rental_id = sr.id
       WHERE 1=1
@@ -168,7 +168,7 @@ export const getPaymentById = async (req, res, next) => {
       `SELECT p.*, u.full_name as customer_name, u.email as customer_email,
               lo.order_number, sr.rental_number
        FROM payments p
-       JOIN users u ON p.user_id = u.id
+       JOIN users u ON p.customer_id = u.id
        LEFT JOIN laundry_orders lo ON p.order_id = lo.id
        LEFT JOIN suit_rentals sr ON p.rental_id = sr.id
        WHERE p.id = ?`,
@@ -182,7 +182,7 @@ export const getPaymentById = async (req, res, next) => {
     const payment = payments[0];
     
     // Check authorization
-    if (userRole === 'customer' && payment.user_id !== userId) {
+    if (userRole === 'customer' && payment.customer_id !== userId) {
       throw new AppError('Unauthorized access', 403);
     }
     

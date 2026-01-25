@@ -153,11 +153,14 @@ const AdminDashboard = () => {
       {loading ? (
         <div style={{ 
           display: 'flex', 
+          flexDirection: 'column',
           justifyContent: 'center', 
           alignItems: 'center', 
-          minHeight: '400px' 
+          minHeight: '400px',
+          gap: '16px'
         }}>
-          <Spin size="large" tip="Loading dashboard data..." />
+          <Spin size="large" />
+          <p style={{ color: '#666', fontSize: '14px' }}>Loading dashboard data...</p>
         </div>
       ) : (
         <div style={{ padding: '24px' }}>
@@ -192,7 +195,7 @@ const AdminDashboard = () => {
                   color: 'white',
                   transition: 'transform 0.3s, box-shadow 0.3s'
                 }}
-                bodyStyle={{ padding: '24px' }}
+                styles={{ body: { padding: '24px' } }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
@@ -220,7 +223,7 @@ const AdminDashboard = () => {
                   color: 'white',
                   transition: 'transform 0.3s, box-shadow 0.3s'
                 }}
-                bodyStyle={{ padding: '24px' }}
+                styles={{ body: { padding: '24px' } }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
@@ -248,7 +251,7 @@ const AdminDashboard = () => {
                   color: 'white',
                   transition: 'transform 0.3s, box-shadow 0.3s'
                 }}
-                bodyStyle={{ padding: '24px' }}
+                styles={{ body: { padding: '24px' } }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
@@ -278,7 +281,7 @@ const AdminDashboard = () => {
                   color: 'white',
                   transition: 'transform 0.3s, box-shadow 0.3s'
                 }}
-                bodyStyle={{ padding: '24px' }}
+                styles={{ body: { padding: '24px' } }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
@@ -305,7 +308,7 @@ const AdminDashboard = () => {
               border: 'none',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '24px' } }}
           >
             <h3 style={{ 
               fontSize: '18px', 
@@ -404,7 +407,7 @@ const AdminDashboard = () => {
               border: 'none',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '24px' } }}
           >
             <div style={{ 
               display: 'flex', 
@@ -440,7 +443,7 @@ const AdminDashboard = () => {
               border: 'none',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             }}
-            bodyStyle={{ padding: '24px' }}
+            styles={{ body: { padding: '24px' } }}
           >
             <div style={{ 
               display: 'flex', 

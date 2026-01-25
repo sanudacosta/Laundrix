@@ -239,7 +239,7 @@ const PaymentManagement = () => {
             border: 'none',
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
           }}
-          bodyStyle={{ padding: '32px' }}
+          styles={{ body: { padding: '32px' } }}
         >
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ fontSize: '32px', fontWeight: '700', margin: 0, color: '#1a1a2e', letterSpacing: '-0.5px' }}>
