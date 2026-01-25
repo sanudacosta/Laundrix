@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { ShoppingCart, Trash2, Calendar, Shirt, MapPin, CreditCard, ArrowRight, Package, Info } from 'lucide-react';
@@ -33,10 +34,11 @@ const Cart = () => {
 
     try {
       await rentalAPI.removeFromCart(itemId);
+      toast.success('Item removed from cart');
       fetchCart();
     } catch (error) {
       console.error('Error removing item:', error);
-      alert('Failed to remove item. Please try again.');
+      toast.error('Failed to remove item. Please try again.');
     }
   };
 
@@ -45,27 +47,28 @@ const Cart = () => {
 
     try {
       await rentalAPI.clearCart();
+      toast.success('Cart cleared');
       fetchCart();
     } catch (error) {
       console.error('Error clearing cart:', error);
-      alert('Failed to clear cart. Please try again.');
+      toast.error('Failed to clear cart. Please try again.');
     }
   };
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) {
-      alert('Your cart is empty');
+      toast.error('Your cart is empty');
       return;
     }
 
     try {
       setProcessingCheckout(true);
       const response = await rentalAPI.checkout();
-      alert(`Checkout successful! ${response.data.data.length} rental(s) created.`);
+      toast.success(`Checkout successful! ${response.data.data.length} rental(s) created.`, { duration: 4000 });
       navigate('/customer/my-rentals');
     } catch (error) {
       console.error('Error during checkout:', error);
-      alert(error.response?.data?.message || 'Checkout failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Checkout failed. Please try again.');
     } finally {
       setProcessingCheckout(false);
     }

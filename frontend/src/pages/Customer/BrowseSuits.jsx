@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
 import { Search, Filter, Shirt, Calendar, MapPin, X, ChevronLeft, ChevronRight, XCircle, ShoppingCart, Info } from 'lucide-react';
 import { rentalAPI } from '../../services/apiService';
@@ -135,7 +136,7 @@ const BrowseSuits = () => {
         special_instructions: bookingData.special_instructions
       });
 
-      alert('Suit booked successfully!');
+      toast.success('Suit booked successfully!', { duration: 3000 });
       setShowBookingModal(false);
       setSelectedSuit(null);
       setSelectedSize('');
@@ -150,7 +151,7 @@ const BrowseSuits = () => {
       fetchSuits();
     } catch (error) {
       console.error('Error booking suit:', error);
-      alert(error.response?.data?.error || 'Failed to book suit');
+      toast.error(error.response?.data?.error || 'Failed to book suit');
     }
   };
 
@@ -158,12 +159,12 @@ const BrowseSuits = () => {
     try {
       const days = calculateDuration();
       if (days <= 0) {
-        alert('Please select valid dates');
+        toast.error('Please select valid dates');
         return;
       }
 
       if (!selectedSize) {
-        alert('Please select a size');
+        toast.error('Please select a size');
         return;
       }
 
@@ -177,7 +178,7 @@ const BrowseSuits = () => {
         special_instructions: bookingData.special_instructions
       });
 
-      alert('Added to cart successfully!');
+      toast.success('Added to cart successfully!', { duration: 3000 });
       setShowBookingModal(false);
       setSelectedSuit(null);
       setSelectedSize('');
@@ -191,7 +192,7 @@ const BrowseSuits = () => {
       });
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert(error.response?.data?.message || 'Failed to add to cart. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to add to cart. Please try again.');
     }
   };
 

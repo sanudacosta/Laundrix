@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
 import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle } from 'lucide-react';
 import { orderAPI } from '../../services/apiService';
@@ -228,7 +229,7 @@ const PlaceOrder = () => {
       const finalItemDescription = buildItemDescription();
       
       if (!finalItemDescription) {
-        alert('Please select at least one item type');
+        toast.error('Please select at least one item type');
         setLoading(false);
         return;
       }
@@ -252,7 +253,9 @@ const PlaceOrder = () => {
       
       const response = await orderAPI.createOrder(orderPayload);
       
-      alert('Order placed successfully! Order Number: ' + (response?.data?.data?.orderNumber || ''));
+      toast.success('Order placed successfully! Order Number: ' + (response?.data?.data?.orderNumber || ''), {
+        duration: 5000,
+      });
       // Reset form
       setStep(1);
       setSelectedServiceDuration(0);
@@ -277,7 +280,7 @@ const PlaceOrder = () => {
     } catch (error) {
       console.error('Error placing order:', error);
       console.error('Error response:', error.response?.data);
-      alert(error.response?.data?.error || error.response?.data?.message || 'Failed to place order');
+      toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to place order');
     } finally {
       setLoading(false);
     }
