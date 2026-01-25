@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Button, Spin } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Button, Spin } from 'antd';
 import { 
-  DashboardOutlined, 
-  UserOutlined, 
-  ShoppingOutlined, 
-  DollarOutlined, 
-  FileTextOutlined, 
-  SettingOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
   ShoppingCartOutlined,
-  TeamOutlined
+  TeamOutlined,
+  ShoppingOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { orderAPI, rentalAPI } from '../../services/apiService';
-
-const { Header, Sider, Content } = Layout;
+import AdminLayout from '../../components/AdminLayout';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -158,185 +149,328 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible>
-        <div style={{ color: 'white', padding: '16px', fontSize: '20px', fontWeight: 'bold' }}>
-          Laundrix Admin
+    <AdminLayout>
+      {loading ? (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px' 
+        }}>
+          <Spin size="large" tip="Loading dashboard data..." />
         </div>
-        <Menu theme="dark" mode="inline" defaultSelectedKeys={['1']}>
-          <Menu.Item key="1" icon={<DashboardOutlined />}>
-            <Link to="/admin/dashboard">Dashboard</Link>
-          </Menu.Item>
-          <Menu.Item key="2" icon={<UserOutlined />}>
-            <Link to="/admin/users">Users</Link>
-          </Menu.Item>
-          <Menu.Item key="3" icon={<ShoppingOutlined />}>
-            <Link to="/admin/orders">Orders</Link>
-          </Menu.Item>
-          <Menu.Item key="4" icon={<ShoppingOutlined />}>
-            <Link to="/admin/rentals">Rentals</Link>
-          </Menu.Item>
-          <Menu.Item key="5" icon={<ShoppingOutlined />}>
-            <Link to="/admin/inventory">Inventory</Link>
-          </Menu.Item>
-          <Menu.Item key="6" icon={<DollarOutlined />}>
-            <Link to="/admin/payments">Payments</Link>
-          </Menu.Item>
-          <Menu.Item key="7" icon={<FileTextOutlined />}>
-            <Link to="/admin/reports">Reports</Link>
-          </Menu.Item>
-          <Menu.Item key="8" icon={<SettingOutlined />}>
-            <Link to="/admin/settings">Settings</Link>
-          </Menu.Item>
-        </Menu>
-      </Sider>
-      <Layout>
-        <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-          <h2 style={{ margin: 0, fontSize: '20px' }}>Admin Dashboard</h2>
-          <div>
-            <span style={{ marginRight: 16, color: '#666' }}>Welcome, <strong>{user?.full_name}</strong></span>
-            <button 
-              onClick={logout} 
-              style={{ 
-                padding: '8px 20px', 
-                background: '#ff4d4f', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '6px', 
-                cursor: 'pointer',
-                fontWeight: '500'
-              }}
-            >
-              Logout
-            </button>
-          </div>
-        </Header>
-        <Content style={{ margin: '24px 16px', padding: 24, background: '#f0f2f5' }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '100px 0' }}>
-              <Spin size="large" tip="Loading dashboard data..." />
+      ) : (
+        <div style={{ padding: '24px' }}>
+          <h1 style={{ 
+            fontSize: '32px', 
+            fontWeight: '700', 
+            marginBottom: '8px', 
+            color: '#1a1a2e',
+            letterSpacing: '-0.5px'
+          }}>
+            Dashboard Overview
+          </h1>
+          <p style={{ 
+            color: '#666', 
+            fontSize: '15px', 
+            marginBottom: '32px',
+            fontWeight: '400'
+          }}>
+            Welcome back! Here's what's happening with your business today.
+          </p>
+          
+          {/* Statistics Cards */}
+          <Row gutter={[24, 24]} style={{ marginBottom: '32px' }}>
+            <Col xs={24} sm={12} lg={6}>
+              <Card 
+                hoverable
+                style={{
+                  borderRadius: '16px',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  transition: 'transform 0.3s, box-shadow 0.3s'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>Total Orders</div>
+                    <div style={{ fontSize: '32px', fontWeight: '700' }}>{stats.totalOrders}</div>
+                  </div>
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.2)', 
+                    padding: '12px', 
+                    borderRadius: '12px' 
+                  }}>
+                    <ShoppingCartOutlined style={{ fontSize: '24px' }} />
+                  </div>
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card 
+                hoverable
+                style={{
+                  borderRadius: '16px',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                  color: 'white',
+                  transition: 'transform 0.3s, box-shadow 0.3s'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>Total Rentals</div>
+                    <div style={{ fontSize: '32px', fontWeight: '700' }}>{stats.totalRentals}</div>
+                  </div>
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.2)', 
+                    padding: '12px', 
+                    borderRadius: '12px' 
+                  }}>
+                    <ShoppingOutlined style={{ fontSize: '24px' }} />
+                  </div>
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card 
+                hoverable
+                style={{
+                  borderRadius: '16px',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                  color: 'white',
+                  transition: 'transform 0.3s, box-shadow 0.3s'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>Total Revenue</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700' }}>
+                      LKR {parseFloat(stats.totalRevenue).toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.2)', 
+                    padding: '12px', 
+                    borderRadius: '12px' 
+                  }}>
+                    <ArrowUpOutlined style={{ fontSize: '24px' }} />
+                  </div>
+                </div>
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <Card 
+                hoverable
+                style={{
+                  borderRadius: '16px',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                  color: 'white',
+                  transition: 'transform 0.3s, box-shadow 0.3s'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '8px' }}>Total Customers</div>
+                    <div style={{ fontSize: '32px', fontWeight: '700' }}>{stats.totalCustomers}</div>
+                  </div>
+                  <div style={{ 
+                    background: 'rgba(255,255,255,0.2)', 
+                    padding: '12px', 
+                    borderRadius: '12px' 
+                  }}>
+                    <TeamOutlined style={{ fontSize: '24px' }} />
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Quick Actions */}
+          <Card 
+            style={{
+              marginBottom: '24px',
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <h3 style={{ 
+              fontSize: '18px', 
+              fontWeight: '600', 
+              marginBottom: '20px',
+              color: '#1a1a2e'
+            }}>
+              Quick Actions
+            </h3>
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={6}>
+                <Link to="/admin/orders">
+                  <Button 
+                    type="primary" 
+                    size="large" 
+                    block
+                    icon={<ShoppingOutlined />}
+                    style={{
+                      height: '48px',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      border: 'none'
+                    }}
+                  >
+                    View Orders
+                  </Button>
+                </Link>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Link to="/admin/rentals">
+                  <Button 
+                    type="primary" 
+                    size="large" 
+                    block
+                    icon={<ShoppingCartOutlined />}
+                    style={{
+                      height: '48px',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                      border: 'none'
+                    }}
+                  >
+                    View Rentals
+                  </Button>
+                </Link>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Link to="/admin/users">
+                  <Button 
+                    size="large" 
+                    block
+                    icon={<TeamOutlined />}
+                    style={{
+                      height: '48px',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      border: '2px solid #e3e8ef',
+                      color: '#1a1a2e'
+                    }}
+                  >
+                    Manage Users
+                  </Button>
+                </Link>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Link to="/admin/reports">
+                  <Button 
+                    size="large" 
+                    block
+                    style={{
+                      height: '48px',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      border: '2px solid #e3e8ef',
+                      color: '#1a1a2e'
+                    }}
+                  >
+                    View Reports
+                  </Button>
+                </Link>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Recent Orders */}
+          <Card 
+            style={{
+              marginBottom: '24px',
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600',
+                margin: 0,
+                color: '#1a1a2e'
+              }}>
+                Recent Laundry Orders
+              </h3>
+              <Link to="/admin/orders" style={{ color: '#667eea', fontWeight: '500' }}>
+                View All →
+              </Link>
             </div>
-          ) : (
-            <>
-              <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px', color: '#1a1a1a' }}>
-                Dashboard Overview
-              </h1>
-              
-              {/* Statistics Cards */}
-              <Row gutter={[16, 16]} style={{ marginBottom: '32px' }}>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card hoverable>
-                    <Statistic
-                      title="Total Orders"
-                      value={stats.totalOrders}
-                      prefix={<ShoppingCartOutlined style={{ color: '#1890ff' }} />}
-                      valueStyle={{ color: '#1890ff', fontWeight: 'bold' }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card hoverable>
-                    <Statistic
-                      title="Total Rentals"
-                      value={stats.totalRentals}
-                      prefix={<ShoppingOutlined style={{ color: '#52c41a' }} />}
-                      valueStyle={{ color: '#52c41a', fontWeight: 'bold' }}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card hoverable>
-                    <Statistic
-                      title="Total Revenue"
-                      value={stats.totalRevenue}
-                      prefix="LKR"
-                      valueStyle={{ color: '#faad14', fontWeight: 'bold' }}
-                      suffix={<ArrowUpOutlined style={{ fontSize: '14px' }} />}
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} sm={12} lg={6}>
-                  <Card hoverable>
-                    <Statistic
-                      title="Total Customers"
-                      value={stats.totalCustomers}
-                      prefix={<TeamOutlined style={{ color: '#722ed1' }} />}
-                      valueStyle={{ color: '#722ed1', fontWeight: 'bold' }}
-                    />
-                  </Card>
-                </Col>
-              </Row>
+            <Table 
+              columns={orderColumns} 
+              dataSource={recentOrders} 
+              rowKey="id"
+              pagination={false}
+              locale={{ emptyText: 'No orders yet' }}
+            />
+          </Card>
 
-              {/* Quick Actions */}
-              <Card 
-                title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Quick Actions</span>}
-                style={{ marginBottom: '24px' }}
-              >
-                <Row gutter={[16, 16]}>
-                  <Col>
-                    <Link to="/admin/orders">
-                      <Button type="primary" size="large" icon={<ShoppingOutlined />}>
-                        View All Orders
-                      </Button>
-                    </Link>
-                  </Col>
-                  <Col>
-                    <Link to="/admin/rentals">
-                      <Button type="primary" size="large" icon={<ShoppingCartOutlined />} style={{ background: '#52c41a', borderColor: '#52c41a' }}>
-                        View All Rentals
-                      </Button>
-                    </Link>
-                  </Col>
-                  <Col>
-                    <Link to="/admin/users">
-                      <Button size="large" icon={<UserOutlined />}>
-                        Manage Users
-                      </Button>
-                    </Link>
-                  </Col>
-                  <Col>
-                    <Link to="/admin/reports">
-                      <Button size="large" icon={<FileTextOutlined />}>
-                        Generate Reports
-                      </Button>
-                    </Link>
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Recent Orders */}
-              <Card 
-                title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Recent Laundry Orders</span>}
-                extra={<Link to="/admin/orders">View All</Link>}
-                style={{ marginBottom: '24px' }}
-              >
-                <Table 
-                  columns={orderColumns} 
-                  dataSource={recentOrders} 
-                  rowKey="id"
-                  pagination={false}
-                  locale={{ emptyText: 'No orders yet' }}
-                />
-              </Card>
-
-              {/* Recent Rentals */}
-              <Card 
-                title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Recent Suit Rentals</span>}
-                extra={<Link to="/admin/rentals">View All</Link>}
-              >
-                <Table 
-                  columns={rentalColumns} 
-                  dataSource={recentRentals} 
-                  rowKey="id"
-                  pagination={false}
-                  locale={{ emptyText: 'No rentals yet' }}
-                />
-              </Card>
-            </>
-          )}
-        </Content>
-      </Layout>
-    </Layout>
+          {/* Recent Rentals */}
+          <Card 
+            style={{
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ 
+                fontSize: '18px', 
+                fontWeight: '600',
+                margin: 0,
+                color: '#1a1a2e'
+              }}>
+                Recent Suit Rentals
+              </h3>
+              <Link to="/admin/rentals" style={{ color: '#667eea', fontWeight: '500' }}>
+                View All →
+              </Link>
+            </div>
+            <Table 
+              columns={rentalColumns} 
+              dataSource={recentRentals} 
+              rowKey="id"
+              pagination={false}
+              locale={{ emptyText: 'No rentals yet' }}
+            />
+          </Card>
+        </div>
+      )}
+    </AdminLayout>
   );
 };
 

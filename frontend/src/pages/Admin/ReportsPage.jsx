@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Layout, 
   Card,
   Row,
   Col,
@@ -35,9 +34,9 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { reportAPI } from '../../services/apiService';
+import AdminLayout from '../../components/AdminLayout';
 import dayjs from 'dayjs';
 
-const { Content } = Layout;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
@@ -157,14 +156,14 @@ const ReportsPage = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-      <Content style={{ padding: '24px' }}>
+    <AdminLayout>
+      <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0, color: '#1a1a1a' }}>
-            <FileTextOutlined style={{ marginRight: 12, color: '#1890ff' }} />
+          <h1 style={{ fontSize: '32px', fontWeight: '700', margin: 0, color: '#1a1a2e', letterSpacing: '-0.5px' }}>
+            <FileTextOutlined style={{ marginRight: 12, color: '#667eea' }} />
             Reports & Analytics
           </h1>
-          <p style={{ margin: '8px 0 0 0', color: '#666' }}>
+          <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: '15px' }}>
             Revenue reports, inventory analytics, and performance metrics
           </p>
         </div>
@@ -172,54 +171,54 @@ const ReportsPage = () => {
         {/* Stats Overview */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
                 title="Total Revenue"
                 value={352000}
                 prefix="LKR"
-                valueStyle={{ color: '#52c41a', fontWeight: 'bold' }}
+                valueStyle={{ color: '#52c41a', fontWeight: '700', fontSize: '28px' }}
                 suffix={<RiseOutlined />}
               />
-              <div style={{ fontSize: '12px', color: '#52c41a', marginTop: 8 }}>
+              <div style={{ fontSize: '13px', color: '#52c41a', marginTop: 8, fontWeight: '500' }}>
                 +12.5% from last month
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
                 title="Laundry Orders"
                 value={128}
                 prefix={<ShoppingOutlined />}
-                valueStyle={{ color: '#1890ff', fontWeight: 'bold' }}
+                valueStyle={{ color: '#667eea', fontWeight: '700', fontSize: '28px' }}
               />
-              <div style={{ fontSize: '12px', color: '#1890ff', marginTop: 8 }}>
+              <div style={{ fontSize: '13px', color: '#667eea', marginTop: 8, fontWeight: '500' }}>
                 +8.2% from last month
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
                 title="Suit Rentals"
                 value={67}
                 prefix={<ShoppingOutlined />}
-                valueStyle={{ color: '#722ed1', fontWeight: 'bold' }}
+                valueStyle={{ color: '#f093fb', fontWeight: '700', fontSize: '28px' }}
               />
-              <div style={{ fontSize: '12px', color: '#722ed1', marginTop: 8 }}>
+              <div style={{ fontSize: '13px', color: '#f093fb', marginTop: 8, fontWeight: '500' }}>
                 +15.3% from last month
               </div>
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={6}>
-            <Card>
+            <Card style={{ borderRadius: '16px', border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
               <Statistic
                 title="Avg Order Value"
                 value={2750}
                 prefix="LKR"
-                valueStyle={{ color: '#faad14', fontWeight: 'bold' }}
+                valueStyle={{ color: '#fa709a', fontWeight: '700', fontSize: '28px' }}
               />
-              <div style={{ fontSize: '12px', color: '#faad14', marginTop: 8 }}>
+              <div style={{ fontSize: '13px', color: '#fa709a', marginTop: 8, fontWeight: '500' }}>
                 +3.1% from last month
               </div>
             </Card>
@@ -228,8 +227,14 @@ const ReportsPage = () => {
 
         {/* Revenue Chart */}
         <Card 
-          title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Revenue Trends</span>}
-          style={{ marginBottom: 24 }}
+          title={<span style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a2e' }}>Revenue Trends</span>}
+          style={{ 
+            marginBottom: 24,
+            borderRadius: '16px',
+            border: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}
+          bodyStyle={{ padding: '24px' }}
           extra={
             <Space>
               <Select defaultValue="6months" style={{ width: 150 }}>
@@ -261,7 +266,13 @@ const ReportsPage = () => {
           {/* Category Distribution */}
           <Col xs={24} lg={12}>
             <Card 
-              title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Rental by Category</span>}
+              title={<span style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a2e' }}>Rental by Category</span>}
+              style={{
+                borderRadius: '16px',
+                border: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}
+              bodyStyle={{ padding: '24px' }}
             >
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -288,7 +299,13 @@ const ReportsPage = () => {
           {/* Top Performing Suits */}
           <Col xs={24} lg={12}>
             <Card 
-              title={<span style={{ fontSize: '18px', fontWeight: 'bold' }}>Top Performing Suits</span>}
+              title={<span style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a2e' }}>Top Performing Suits</span>}
+              style={{
+                borderRadius: '16px',
+                border: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+              }}
+              bodyStyle={{ padding: '24px' }}
             >
               <Table
                 columns={topSuitsColumns}
@@ -300,8 +317,8 @@ const ReportsPage = () => {
             </Card>
           </Col>
         </Row>
-      </Content>
-    </Layout>
+      </div>
+    </AdminLayout>
   );
 };
 

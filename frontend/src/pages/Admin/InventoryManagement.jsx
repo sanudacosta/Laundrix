@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Layout, 
   Table, 
   Tag, 
   Space, 
@@ -25,8 +24,8 @@ import {
   PictureOutlined
 } from '@ant-design/icons';
 import { rentalAPI, adminAPI } from '../../services/apiService';
+import AdminLayout from '../../components/AdminLayout';
 
-const { Content } = Layout;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -242,16 +241,23 @@ const InventoryManagement = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-      <Content style={{ padding: '24px' }}>
-        <Card>
-          <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <AdminLayout>
+      <div style={{ padding: '24px' }}>
+        <Card
+          style={{
+            borderRadius: '16px',
+            border: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}
+          bodyStyle={{ padding: '32px' }}
+        >
+          <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <div>
-              <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0, color: '#1a1a1a' }}>
-                <ShoppingOutlined style={{ marginRight: 12, color: '#52c41a' }} />
+              <h1 style={{ fontSize: '32px', fontWeight: '700', margin: 0, color: '#1a1a2e', letterSpacing: '-0.5px' }}>
+                <ShoppingOutlined style={{ marginRight: 12, color: '#4facfe' }} />
                 Inventory Management
               </h1>
-              <p style={{ margin: '8px 0 0 0', color: '#666' }}>
+              <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: '15px' }}>
                 Manage suit products and inventory
               </p>
             </div>
@@ -260,6 +266,15 @@ const InventoryManagement = () => {
               size="large" 
               icon={<PlusOutlined />}
               onClick={handleCreate}
+              style={{
+                borderRadius: '12px',
+                height: '48px',
+                fontSize: '15px',
+                fontWeight: '500',
+                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(79, 172, 254, 0.3)'
+              }}
             >
               Add New Suit
             </Button>
@@ -439,8 +454,8 @@ const InventoryManagement = () => {
             </Form.Item>
           </Form>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </AdminLayout>
   );
 };
 

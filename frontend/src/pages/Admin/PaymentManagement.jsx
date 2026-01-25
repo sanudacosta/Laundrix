@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Layout, 
   Table, 
   Tag, 
   Space, 
@@ -21,9 +20,9 @@ import {
   CheckCircleOutlined
 } from '@ant-design/icons';
 import { paymentAPI } from '../../services/apiService';
+import AdminLayout from '../../components/AdminLayout';
 import dayjs from 'dayjs';
 
-const { Content } = Layout;
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -216,15 +215,22 @@ const PaymentManagement = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f0f2f5' }}>
-      <Content style={{ padding: '24px' }}>
-        <Card>
+    <AdminLayout>
+      <div style={{ padding: '24px' }}>
+        <Card
+          style={{
+            borderRadius: '16px',
+            border: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+          }}
+          bodyStyle={{ padding: '32px' }}
+        >
           <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 'bold', margin: 0, color: '#1a1a1a' }}>
-              <DollarOutlined style={{ marginRight: 12, color: '#faad14' }} />
+            <h1 style={{ fontSize: '32px', fontWeight: '700', margin: 0, color: '#1a1a2e', letterSpacing: '-0.5px' }}>
+              <DollarOutlined style={{ marginRight: 12, color: '#fa709a' }} />
               Payment Management
             </h1>
-            <p style={{ margin: '8px 0 0 0', color: '#666' }}>
+            <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: '15px' }}>
               View all payments and process refunds
             </p>
           </div>
@@ -379,8 +385,8 @@ const PaymentManagement = () => {
             </Form.Item>
           </Form>
         </Modal>
-      </Content>
-    </Layout>
+      </div>
+    </AdminLayout>
   );
 };
 
