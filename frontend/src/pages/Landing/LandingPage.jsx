@@ -474,8 +474,8 @@ const LandingPage = () => {
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {[
               {
-                name: 'Starter',
-                price: '15',
+                name: 'Basic',
+                price: '800',
                 period: 'per load',
                 description: 'Perfect for individuals',
                 features: [
@@ -489,7 +489,7 @@ const LandingPage = () => {
               },
               {
                 name: 'Professional',
-                price: '99',
+                price: '5,500',
                 period: 'per month',
                 description: 'Best for frequent users',
                 features: [
@@ -543,7 +543,7 @@ const LandingPage = () => {
                 </p>
                 <div className="mb-6">
                   <span className="text-5xl font-bold text-gray-900">
-                    ${plan.price}
+                    {plan.price === 'Custom' ? plan.price : `LKR ${plan.price}`}
                   </span>
                   <span className="text-gray-600 ml-2">
                     /{plan.period}

@@ -245,55 +245,123 @@ const MyOrders = () => {
             </div>
 
             <div className="p-6 space-y-6">
-              <div>
-                <h3 className="font-bold text-gray-900 mb-2">Order #{selectedOrder.id?.toString().padStart(6, '0')}</h3>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center space-x-1 ${
-                  getStatusColor(selectedOrder.status)
-                }`}>
-                  {getStatusIcon(selectedOrder.status)}
-                  <span>{selectedOrder.status}</span>
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Service</p>
-                  <p className="font-medium">{selectedOrder.cleaning_type?.name || 'N/A'}</p>
+              {/* Order Number & Status */}
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-gray-900 text-lg">Order #{selectedOrder.order_number || selectedOrder.id?.toString().padStart(6, '0')}</h3>
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold inline-flex items-center space-x-1 ${
+                    getStatusColor(selectedOrder.status)
+                  }`}>
+                    {getStatusIcon(selectedOrder.status)}
+                    <span>{selectedOrder.status}</span>
+                  </span>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Speed</p>
-                  <p className="font-medium">{selectedOrder.service_time?.name || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Quantity</p>
-                  <p className="font-medium">{selectedOrder.quantity} items</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Total Amount</p>
-                  <p className="font-medium text-blue-600">{formatCurrency(selectedOrder.total_amount)}</p>
+                <div className="text-sm text-gray-600">
+                  Placed on {new Date(selectedOrder.created_at).toLocaleDateString('en-US', { 
+                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                  })}
                 </div>
               </div>
 
+              {/* Service Details */}
               <div>
-                <p className="text-sm text-gray-500 mb-2">Pickup Address</p>
-                <div className="flex items-start space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-1" />
-                  <p className="text-gray-900">{selectedOrder.pickup_address || 'N/A'}</p>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-blue-600">Service Details</h4>
+                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Cleaning Type</p>
+                    <p className="font-semibold text-gray-900">{selectedOrder.cleaning_type || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Service Speed</p>
+                    <p className="font-semibold text-gray-900">{selectedOrder.service_time || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Quantity</p>
+                    <p className="font-semibold text-gray-900">{selectedOrder.quantity} items</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Weight</p>
+                    <p className="font-semibold text-gray-900">{selectedOrder.weight_kg} kg</p>
+                  </div>
                 </div>
               </div>
 
+              {/* Payment Info */}
               <div>
-                <p className="text-sm text-gray-500 mb-2">Delivery Address</p>
-                <div className="flex items-start space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-400 mt-1" />
-                  <p className="text-gray-900">{selectedOrder.delivery_address || 'N/A'}</p>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-green-600">Payment Information</h4>
+                <div className="bg-green-50 p-4 rounded-xl border border-green-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-700 font-medium">Order Amount</span>
+                    <span className="font-bold text-2xl text-green-700">{formatCurrency(selectedOrder.total_amount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-700 font-medium">Payment Status</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      selectedOrder.payment_status === 'paid' ? 'bg-green-600 text-white' : 
+                      selectedOrder.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedOrder.payment_status?.toUpperCase() || 'PENDING'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule Details */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-purple-600">Schedule</h4>
+                <div className="grid grid-cols-2 gap-4 bg-purple-50 p-4 rounded-xl border border-purple-200">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1 flex items-center">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Pickup Date
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedOrder.pickup_date ? new Date(selectedOrder.pickup_date).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                      }) : 'Not scheduled'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1 flex items-center">
+                      <Truck className="w-3 h-3 mr-1" />
+                      Expected Delivery
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {selectedOrder.expected_delivery_date ? new Date(selectedOrder.expected_delivery_date).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric'
+                      }) : 'TBD'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Addresses */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-orange-600">Addresses</h4>
+                <div className="space-y-3">
+                  <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                    <p className="text-sm text-gray-600 mb-2 font-semibold flex items-center">
+                      <MapPin className="w-4 h-4 mr-1 text-orange-600" />
+                      Pickup Address
+                    </p>
+                    <p className="text-gray-900 pl-5">{selectedOrder.pickup_address || 'N/A'}</p>
+                  </div>
+
+                  <div className="bg-teal-50 p-4 rounded-xl border border-teal-200">
+                    <p className="text-sm text-gray-600 mb-2 font-semibold flex items-center">
+                      <Truck className="w-4 h-4 mr-1 text-teal-600" />
+                      Delivery Address
+                    </p>
+                    <p className="text-gray-900 pl-5">{selectedOrder.delivery_address || 'N/A'}</p>
+                  </div>
                 </div>
               </div>
 
               {selectedOrder.special_instructions && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Special Instructions</p>
-                  <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{selectedOrder.special_instructions}</p>
+                  <h4 className="font-semibold text-gray-900 mb-2 text-sm uppercase tracking-wide text-amber-600">Special Instructions</h4>
+                  <p className="text-gray-900 bg-amber-50 border border-amber-200 p-4 rounded-xl text-sm leading-relaxed">{selectedOrder.special_instructions}</p>
                 </div>
               )}
             </div>

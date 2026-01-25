@@ -38,6 +38,7 @@ export const register = async (req, res, next) => {
         full_name,
         email,
         phone,
+        address,
         role,
         token
       }
@@ -54,7 +55,7 @@ export const login = async (req, res, next) => {
 
     // Find user
     const [users] = await db.query(
-      'SELECT id, full_name, email, password, phone, role, is_active FROM users WHERE email = ?',
+      'SELECT id, full_name, email, password, phone, role, address, is_active FROM users WHERE email = ?',
       [email]
     );
 
@@ -88,6 +89,7 @@ export const login = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        address: user.address,
         token
       }
     });

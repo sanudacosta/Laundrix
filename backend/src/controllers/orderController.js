@@ -8,7 +8,7 @@ export const getAllOrders = async (req, res, next) => {
     const { status, customer_id, date_from, date_to } = req.query;
     
     let query = `
-      SELECT lo.*, u.full_name as customer_name, u.email as customer_email, 
+      SELECT lo.*, u.full_name as customer_name, u.email as customer_email, u.phone as customer_phone,
              ct.name as cleaning_type, st.name as service_time,
              e.full_name as employee_name
       FROM laundry_orders lo
@@ -146,6 +146,8 @@ export const createOrder = async (req, res, next) => {
       quantity,
       weight_kg,
       special_instructions,
+      pickup_address,
+      delivery_address,
       order_type,
       pickup_date
     } = req.body;
@@ -178,12 +180,12 @@ export const createOrder = async (req, res, next) => {
     const [result] = await db.query(
       `INSERT INTO laundry_orders 
        (order_number, customer_id, cleaning_type_id, service_time_id, item_description, 
-        quantity, weight_kg, special_instructions, order_type, subtotal, tax, total_amount, 
-        pickup_date, delivery_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        quantity, weight_kg, special_instructions, pickup_address, delivery_address, order_type, 
+        subtotal, tax, total_amount, pickup_date, delivery_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [orderNumber, customerId, cleaning_type_id, service_time_id, item_description,
-       quantity, weight_kg, special_instructions, order_type, subtotal, tax, totalAmount,
-       pickupDateTime, deliveryDate]
+       quantity, weight_kg, special_instructions, pickup_address, delivery_address, order_type, 
+       subtotal, tax, totalAmount, pickupDateTime, deliveryDate]
     );
     
     const orderId = result.insertId;

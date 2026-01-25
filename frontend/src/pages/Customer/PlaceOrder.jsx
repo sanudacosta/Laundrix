@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle } from 'lucide-react';
 import { orderAPI } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
 
 const PlaceOrder = () => {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [cleaningTypes, setCleaningTypes] = useState([]);
@@ -54,7 +56,14 @@ const PlaceOrder = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+    // Pre-fill user's address if available
+    if (user?.address) {
+      setOrderData(prev => ({
+        ...prev,
+        pickup_address: user.address
+      }));
+    }
+  }, [user?.address]);
 
   const fetchData = async () => {
     try {
@@ -244,7 +253,9 @@ const PlaceOrder = () => {
         item_description: finalItemDescription,
         quantity: parseInt(orderData.quantity) || 1,
         weight_kg: parseFloat(orderData.weight_kg),
-        special_instructions: `Pickup Address: ${orderData.pickup_address}\nDelivery Address: ${orderData.delivery_address}\nDetergent Preference: ${orderData.detergent_preference}${orderData.special_instructions ? '\n' + orderData.special_instructions : ''}`,
+        pickup_address: orderData.pickup_address,
+        delivery_address: orderData.delivery_address,
+        special_instructions: `Detergent Preference: ${orderData.detergent_preference}${orderData.special_instructions ? '\n' + orderData.special_instructions : ''}`,
         order_type: 'online',
         pickup_date: pickupDateTime
       };
@@ -254,7 +265,7 @@ const PlaceOrder = () => {
       const response = await orderAPI.createOrder(orderPayload);
       
       toast.success('Order placed successfully! Order Number: ' + (response?.data?.data?.orderNumber || ''), {
-        duration: 5000,
+        autoClose: 5000,
       });
       // Reset form
       setStep(1);
@@ -377,10 +388,10 @@ const PlaceOrder = () => {
                       <div
                         key={type.id}
                         onClick={() => handleInputChange('cleaning_type_id', type.id)}
-                        className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden ${
+                        className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden shadow-md ${
                           orderData.cleaning_type_id === type.id
-                            ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'
-                            : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                            ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl ring-2 ring-blue-200'
+                            : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-lg hover:ring-2 hover:ring-blue-100'
                         }`}
                       >
                         {orderData.cleaning_type_id === type.id && (
@@ -424,10 +435,10 @@ const PlaceOrder = () => {
                         <div
                           key={time.id}
                           onClick={() => handleInputChange('service_time_id', time.id)}
-                          className={`relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden ${
+                          className={`relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden shadow-md ${
                             orderData.service_time_id === time.id
-                              ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'
-                              : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-md'
+                              ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl ring-2 ring-blue-200'
+                              : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-lg hover:ring-2 hover:ring-blue-100'
                           }`}
                         >
                           {orderData.service_time_id === time.id && (
@@ -483,11 +494,17 @@ const PlaceOrder = () => {
                   {itemCategories.map(item => (
                     <div
                       key={item.id}
-                      className={`relative p-5 rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                      className={`relative p-5 rounded-xl border-3 transition-all duration-200 overflow-hidden ${
                         itemCounts[item.id]
-                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-md'
-                          : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm'
+                          ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg ring-2 ring-blue-300'
+                          : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md shadow-sm'
                       }`}
+                      style={{
+                        borderWidth: itemCounts[item.id] ? '3px' : '2px',
+                        boxShadow: itemCounts[item.id] 
+                          ? '0 4px 14px rgba(37, 99, 235, 0.25)' 
+                          : '0 1px 3px rgba(0,0,0,0.1)'
+                      }}
                     >
                       {itemCounts[item.id] && (
                         <div className="absolute top-3 right-3 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md z-10">
@@ -514,7 +531,7 @@ const PlaceOrder = () => {
                         <div className="flex items-center justify-center space-x-2">
                           <button
                             onClick={() => decrementItem(item.id)}
-                            className="w-9 h-9 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold transition-all active:scale-95"
+                            className="w-9 h-9 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold transition-all active:scale-95 border-2 border-red-300"
                           >
                             −
                           </button>
@@ -528,7 +545,7 @@ const PlaceOrder = () => {
                           />
                           <button
                             onClick={() => incrementItem(item.id)}
-                            className="w-9 h-9 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 font-bold transition-all active:scale-95"
+                            className="w-9 h-9 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 font-bold transition-all active:scale-95 border-2 border-green-300"
                           >
                             +
                           </button>

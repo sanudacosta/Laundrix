@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 import { ShoppingCart, Trash2, Calendar, Shirt, MapPin, CreditCard, ArrowRight, Package, Info } from 'lucide-react';
@@ -64,7 +64,7 @@ const Cart = () => {
     try {
       setProcessingCheckout(true);
       const response = await rentalAPI.checkout();
-      toast.success(`Checkout successful! ${response.data.data.length} rental(s) created.`, { duration: 4000 });
+      toast.success(`Checkout successful! ${response.data.data.length} rental(s) created.`, { autoClose: 4000 });
       navigate('/customer/my-rentals');
     } catch (error) {
       console.error('Error during checkout:', error);

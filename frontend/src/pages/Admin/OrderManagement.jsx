@@ -380,6 +380,20 @@ const OrderManagement = () => {
               <Descriptions.Item label="Assigned Employee" span={2}>
                 {selectedOrder.assigned_employee_name || 'Not Assigned'}
               </Descriptions.Item>
+              {selectedOrder.pickup_address && (
+                <Descriptions.Item label="Pickup Address" span={2}>
+                  <div style={{ backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '8px', border: '1px solid #bae6fd' }}>
+                    {selectedOrder.pickup_address}
+                  </div>
+                </Descriptions.Item>
+              )}
+              {selectedOrder.delivery_address && (
+                <Descriptions.Item label="Delivery Address" span={2}>
+                  <div style={{ backgroundColor: '#f0fdf4', padding: '12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                    {selectedOrder.delivery_address}
+                  </div>
+                </Descriptions.Item>
+              )}
               {selectedOrder.special_instructions && (
                 <Descriptions.Item label="Special Instructions" span={2}>
                   {selectedOrder.special_instructions}

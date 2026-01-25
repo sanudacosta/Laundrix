@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import { Search, Filter, Shirt, Calendar, MapPin, X, ChevronLeft, ChevronRight, XCircle, ShoppingCart, Info } from 'lucide-react';
 import { rentalAPI } from '../../services/apiService';
@@ -136,7 +136,7 @@ const BrowseSuits = () => {
         special_instructions: bookingData.special_instructions
       });
 
-      toast.success('Suit booked successfully!', { duration: 3000 });
+      toast.success('Suit booked successfully!', { autoClose: 3000 });
       setShowBookingModal(false);
       setSelectedSuit(null);
       setSelectedSize('');
@@ -178,7 +178,7 @@ const BrowseSuits = () => {
         special_instructions: bookingData.special_instructions
       });
 
-      toast.success('Added to cart successfully!', { duration: 3000 });
+      toast.success('Added to cart successfully!', { autoClose: 3000 });
       setShowBookingModal(false);
       setSelectedSuit(null);
       setSelectedSize('');
