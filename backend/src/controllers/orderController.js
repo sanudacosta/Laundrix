@@ -190,8 +190,8 @@ export const createOrder = async (req, res, next) => {
     
     // Add to history
     await db.query(
-      'INSERT INTO order_status_history (order_id, status, changed_by, notes) VALUES (?, ?, ?, ?)',
-      [orderId, 'pending', customerId, 'Order placed']
+      'INSERT INTO order_status_history (order_id, old_status, new_status, changed_by, notes) VALUES (?, ?, ?, ?, ?)',
+      [orderId, null, 'pending', customerId, 'Order placed']
     );
     
     // Send notification
@@ -227,14 +227,15 @@ export const updateOrderStatus = async (req, res, next) => {
     }
     
     const customerId = orders[0].customer_id;
+    const oldStatus = orders[0].status;
     
     // Update order
     await db.query('UPDATE laundry_orders SET status = ? WHERE id = ?', [status, id]);
     
     // Add to history
     await db.query(
-      'INSERT INTO order_status_history (order_id, status, changed_by, notes) VALUES (?, ?, ?, ?)',
-      [id, status, userId, notes || `Status changed to ${status}`]
+      'INSERT INTO order_status_history (order_id, old_status, new_status, changed_by, notes) VALUES (?, ?, ?, ?, ?)',
+      [id, oldStatus, status, userId, notes || `Status changed from ${oldStatus} to ${status}`]
     );
     
     // Send notification
