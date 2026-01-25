@@ -129,7 +129,7 @@ const InventoryManagement = () => {
           height={50}
           src={url}
           alt="Suit"
-          style={{ objectFit: 'cover', borderRadius: '4px' }}
+          style={{ objectFit: 'cover', borderRadius: '8px' }}
           fallback="https://via.placeholder.com/50"
         />
       )
@@ -138,57 +138,65 @@ const InventoryManagement = () => {
       title: 'Code',
       dataIndex: 'product_code',
       key: 'product_code',
-      width: 100,
-      render: (text) => <Tag color="blue">{text}</Tag>
+      width: 95,
+      render: (text) => <Tag color="blue" style={{ fontSize: '12px' }}>{text}</Tag>
     },
     {
       title: 'Suit Name',
       dataIndex: 'name',
       key: 'name',
-      width: 200,
+      width: 170,
+      ellipsis: { showTitle: false },
       render: (text, record) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{text}</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>{record.brand}</div>
-        </div>
+        <Tooltip title={`${text} - ${record.brand}`}>
+          <div>
+            <div style={{ fontWeight: 500, fontSize: '14px' }}>{text}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>{record.brand}</div>
+          </div>
+        </Tooltip>
       )
     },
     {
       title: 'Category',
       dataIndex: 'category_name',
       key: 'category_name',
-      width: 120,
+      width: 110,
+      responsive: ['lg'],
       filters: categories.map(cat => ({ text: cat.name, value: cat.name })),
       onFilter: (value, record) => record.category_name === value,
+      render: (text) => <span style={{ fontSize: '13px' }}>{text}</span>
     },
     {
       title: 'Color',
       dataIndex: 'color',
       key: 'color',
-      width: 120,
+      width: 90,
+      responsive: ['md'],
+      render: (text) => <span style={{ fontSize: '13px' }}>{text}</span>
     },
     {
       title: 'Daily Rate',
       dataIndex: 'rental_price_per_day',
       key: 'rental_price_per_day',
-      width: 120,
-      render: (price) => <span style={{ fontWeight: 'bold' }}>LKR {parseFloat(price).toFixed(2)}</span>
+      width: 100,
+      render: (price) => <span style={{ fontWeight: '600', fontSize: '14px', color: '#52c41a' }}>LKR {parseFloat(price).toFixed(0)}</span>
     },
     {
       title: 'Deposit',
       dataIndex: 'deposit_amount',
       key: 'deposit_amount',
-      width: 120,
-      render: (price) => `LKR ${parseFloat(price).toFixed(2)}`
+      width: 95,
+      responsive: ['xl'],
+      render: (price) => <span style={{ fontSize: '13px' }}>LKR {parseFloat(price).toFixed(0)}</span>
     },
     {
       title: 'Available',
       dataIndex: 'available_count',
       key: 'available_count',
-      width: 100,
+      width: 95,
       render: (count) => (
-        <Tag color={count > 0 ? 'success' : 'error'}>
-          {count} units
+        <Tag color={count > 0 ? 'success' : 'error'} style={{ fontSize: '12px' }}>
+          {count}
         </Tag>
       )
     },
@@ -196,14 +204,14 @@ const InventoryManagement = () => {
       title: 'Status',
       dataIndex: 'is_active',
       key: 'is_active',
-      width: 100,
+      width: 90,
       filters: [
         { text: 'Active', value: true },
         { text: 'Inactive', value: false },
       ],
       onFilter: (value, record) => record.is_active === value,
       render: (isActive) => (
-        <Tag color={isActive ? 'success' : 'error'}>
+        <Tag color={isActive ? 'success' : 'error'} style={{ fontSize: '12px' }}>
           {isActive ? 'ACTIVE' : 'INACTIVE'}
         </Tag>
       )
@@ -212,15 +220,17 @@ const InventoryManagement = () => {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 120,
+      width: 110,
       render: (_, record) => (
-        <Space>
-          <Button 
-            type="primary" 
-            icon={<EditOutlined />} 
-            size="small"
-            onClick={() => handleEdit(record)}
-          />
+        <Space size="small">
+          <Tooltip title="Edit Suit">
+            <Button 
+              type="text" 
+              icon={<EditOutlined />} 
+              onClick={() => handleEdit(record)}
+              style={{ color: '#4facfe' }}
+            />
+          </Tooltip>
           <Popconfirm
             title="Delete Suit"
             description="Are you sure? This will also delete all inventory items."
@@ -228,12 +238,13 @@ const InventoryManagement = () => {
             okText="Yes"
             cancelText="No"
           >
-            <Button 
-              type="primary" 
-              danger 
-              icon={<DeleteOutlined />} 
-              size="small"
-            />
+            <Tooltip title="Delete Suit">
+              <Button 
+                type="text" 
+                danger 
+                icon={<DeleteOutlined />}
+              />
+            </Tooltip>
           </Popconfirm>
         </Space>
       )
@@ -285,11 +296,13 @@ const InventoryManagement = () => {
             dataSource={suits}
             rowKey="id"
             loading={loading}
-            scroll={{ x: 1400 }}
+            size="middle"
+            scroll={{ x: 1000 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} suits`
+              showTotal: (total) => `Total ${total} suits`,
+              responsive: true
             }}
           />
         </Card>

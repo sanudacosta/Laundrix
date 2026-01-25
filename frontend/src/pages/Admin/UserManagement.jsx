@@ -115,32 +115,45 @@ const UserManagement = () => {
       dataIndex: 'id',
       key: 'id',
       width: 60,
+      render: (text) => <span style={{ fontWeight: '600', fontSize: '14px' }}>#{text}</span>
     },
     {
       title: 'Full Name',
       dataIndex: 'full_name',
       key: 'full_name',
-      render: (text) => <span style={{ fontWeight: 500 }}>{text}</span>
+      width: 150,
+      ellipsis: { showTitle: false },
+      render: (text) => (
+        <Tooltip title={text}>
+          <span style={{ fontWeight: 500, fontSize: '14px' }}>{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      width: 180,
+      ellipsis: { showTitle: false },
       render: (text) => (
-        <Space>
-          <MailOutlined style={{ color: '#1890ff' }} />
-          {text}
-        </Space>
+        <Tooltip title={text}>
+          <Space>
+            <MailOutlined style={{ color: '#667eea' }} />
+            <span style={{ fontSize: '13px' }}>{text}</span>
+          </Space>
+        </Tooltip>
       )
     },
     {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
+      width: 130,
+      responsive: ['md'],
       render: (text) => (
         <Space>
           <PhoneOutlined style={{ color: '#52c41a' }} />
-          {text}
+          <span style={{ fontSize: '13px' }}>{text}</span>
         </Space>
       )
     },
@@ -148,6 +161,7 @@ const UserManagement = () => {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
+      width: 100,
       filters: [
         { text: 'Admin', value: 'admin' },
         { text: 'Employee', value: 'employee' },
@@ -155,7 +169,7 @@ const UserManagement = () => {
       ],
       onFilter: (value, record) => record.role === value,
       render: (role) => (
-        <Tag color={getRoleColor(role)} style={{ fontWeight: 500 }}>
+        <Tag color={getRoleColor(role)} style={{ fontWeight: 500, fontSize: '12px' }}>
           {role.toUpperCase()}
         </Tag>
       )
@@ -164,13 +178,14 @@ const UserManagement = () => {
       title: 'Status',
       dataIndex: 'is_active',
       key: 'is_active',
+      width: 90,
       filters: [
         { text: 'Active', value: true },
         { text: 'Inactive', value: false },
       ],
       onFilter: (value, record) => record.is_active === value,
       render: (isActive) => (
-        <Tag color={isActive ? 'success' : 'error'}>
+        <Tag color={isActive ? 'success' : 'error'} style={{ fontSize: '12px' }}>
           {isActive ? 'ACTIVE' : 'INACTIVE'}
         </Tag>
       )
@@ -178,15 +193,16 @@ const UserManagement = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 150,
+      fixed: 'right',
+      width: 110,
       render: (_, record) => (
-        <Space>
+        <Space size="small">
           <Tooltip title="Edit User">
             <Button 
-              type="primary" 
+              type="text" 
               icon={<EditOutlined />} 
-              size="small"
               onClick={() => handleEdit(record)}
+              style={{ color: '#667eea' }}
             />
           </Tooltip>
           <Popconfirm
@@ -198,10 +214,9 @@ const UserManagement = () => {
           >
             <Tooltip title="Delete User">
               <Button 
-                type="primary" 
+                type="text" 
                 danger 
-                icon={<DeleteOutlined />} 
-                size="small"
+                icon={<DeleteOutlined />}
               />
             </Tooltip>
           </Popconfirm>
@@ -255,10 +270,12 @@ const UserManagement = () => {
             dataSource={users}
             rowKey="id"
             loading={loading}
+            size="middle"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} users`
+              showTotal: (total) => `Total ${total} users`,
+              responsive: true
             }}
           />
         </Card>

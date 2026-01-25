@@ -12,7 +12,8 @@ import {
   message,
   DatePicker,
   Descriptions,
-  Badge
+  Badge,
+  Tooltip
 } from 'antd';
 import { 
   ShoppingOutlined,
@@ -20,7 +21,8 @@ import {
   UserOutlined,
   CalendarOutlined,
   DollarOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  EditOutlined
 } from '@ant-design/icons';
 import { orderAPI, adminAPI } from '../../services/apiService';
 import AdminLayout from '../../components/AdminLayout';
@@ -137,54 +139,69 @@ const OrderManagement = () => {
       dataIndex: 'order_number',
       key: 'order_number',
       fixed: 'left',
-      width: 150,
-      render: (text) => <span style={{ fontWeight: 'bold', color: '#1890ff' }}>{text}</span>
+      width: 130,
+      render: (text) => <span style={{ fontWeight: '600', color: '#667eea', fontSize: '14px' }}>{text}</span>
     },
     {
       title: 'Customer',
       dataIndex: 'customer_name',
       key: 'customer_name',
-      width: 150,
+      width: 140,
+      ellipsis: { showTitle: false },
+      render: (text) => (
+        <Tooltip title={text}>
+          <span style={{ fontSize: '14px' }}>{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: 'Items',
       dataIndex: 'item_description',
       key: 'item_description',
-      width: 200,
-      ellipsis: true
+      width: 180,
+      ellipsis: { showTitle: false },
+      render: (text) => (
+        <Tooltip title={text}>
+          <span style={{ fontSize: '13px', color: '#666' }}>{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: 'Service',
       dataIndex: 'cleaning_type',
       key: 'cleaning_type',
-      width: 150,
+      width: 120,
+      ellipsis: true,
+      render: (text) => <span style={{ fontSize: '13px' }}>{text}</span>
     },
     {
       title: 'Pickup',
       dataIndex: 'pickup_date',
       key: 'pickup_date',
-      width: 120,
-      render: (date) => dayjs(date).format('MMM DD, YYYY')
+      width: 100,
+      responsive: ['md'],
+      render: (date) => <span style={{ fontSize: '13px' }}>{dayjs(date).format('MMM DD')}</span>
     },
     {
       title: 'Delivery',
       dataIndex: 'delivery_date',
       key: 'delivery_date',
-      width: 120,
-      render: (date) => dayjs(date).format('MMM DD, YYYY')
+      width: 100,
+      responsive: ['md'],
+      render: (date) => <span style={{ fontSize: '13px' }}>{dayjs(date).format('MMM DD')}</span>
     },
     {
       title: 'Amount',
       dataIndex: 'total_amount',
       key: 'total_amount',
-      width: 120,
-      render: (amount) => <span style={{ fontWeight: 'bold' }}>LKR {parseFloat(amount).toFixed(2)}</span>
+      width: 110,
+      render: (amount) => <span style={{ fontWeight: '600', fontSize: '14px', color: '#52c41a' }}>LKR {parseFloat(amount).toFixed(0)}</span>
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      width: 120,
+      width: 110,
       filters: [
         { text: 'Pending', value: 'pending' },
         { text: 'In Progress', value: 'in-progress' },
@@ -194,8 +211,8 @@ const OrderManagement = () => {
       ],
       onFilter: (value, record) => record.status === value,
       render: (status) => (
-        <Tag color={getStatusColor(status)} style={{ fontWeight: 500 }}>
-          {status.toUpperCase()}
+        <Tag color={getStatusColor(status)} style={{ fontWeight: 500, fontSize: '12px' }}>
+          {status.replace('-', ' ').toUpperCase()}
         </Tag>
       )
     },
@@ -203,14 +220,15 @@ const OrderManagement = () => {
       title: 'Payment',
       dataIndex: 'payment_status',
       key: 'payment_status',
-      width: 100,
+      width: 95,
+      responsive: ['lg'],
       filters: [
         { text: 'Pending', value: 'pending' },
         { text: 'Paid', value: 'paid' },
       ],
       onFilter: (value, record) => record.payment_status === value,
       render: (status) => (
-        <Tag color={getPaymentStatusColor(status)}>
+        <Tag color={getPaymentStatusColor(status)} style={{ fontSize: '12px' }}>
           {status?.toUpperCase()}
         </Tag>
       )
@@ -219,28 +237,33 @@ const OrderManagement = () => {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 200,
+      width: 140,
       render: (_, record) => (
         <Space size="small">
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          >
-            View
-          </Button>
-          <Button 
-            type="link"
-            onClick={() => handleUpdateStatus(record)}
-          >
-            Status
-          </Button>
-          <Button 
-            type="link"
-            onClick={() => handleAssignOrder(record)}
-          >
-            Assign
-          </Button>
+          <Tooltip title="View Details">
+            <Button 
+              type="text" 
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record)}
+              style={{ color: '#667eea' }}
+            />
+          </Tooltip>
+          <Tooltip title="Update Status">
+            <Button 
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleUpdateStatus(record)}
+              style={{ color: '#1890ff' }}
+            />
+          </Tooltip>
+          <Tooltip title="Assign Employee">
+            <Button 
+              type="text"
+              icon={<UserOutlined />}
+              onClick={() => handleAssignOrder(record)}
+              style={{ color: '#52c41a' }}
+            />
+          </Tooltip>
         </Space>
       )
     }
@@ -272,11 +295,13 @@ const OrderManagement = () => {
             dataSource={orders}
             rowKey="id"
             loading={loading}
-            scroll={{ x: 1400 }}
+            size="middle"
+            scroll={{ x: 1100 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} orders`
+              showTotal: (total) => `Total ${total} orders`,
+              responsive: true
             }}
           />
         </Card>

@@ -11,13 +11,15 @@ import {
   Input,
   message,
   Descriptions,
-  Image
+  Image,
+  Tooltip
 } from 'antd';
 import { 
   ShoppingOutlined,
   EyeOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined
+  CloseCircleOutlined,
+  EditOutlined
 } from '@ant-design/icons';
 import { rentalAPI, adminAPI } from '../../services/apiService';
 import AdminLayout from '../../components/AdminLayout';
@@ -112,47 +114,54 @@ const RentalManagement = () => {
       dataIndex: 'rental_number',
       key: 'rental_number',
       fixed: 'left',
-      width: 150,
-      render: (text) => <span style={{ fontWeight: 'bold', color: '#52c41a' }}>{text}</span>
+      width: 130,
+      render: (text) => <span style={{ fontWeight: '600', color: '#f093fb', fontSize: '14px' }}>{text}</span>
     },
     {
       title: 'Customer',
       dataIndex: 'customer_name',
       key: 'customer_name',
-      width: 150,
+      width: 140,
+      ellipsis: { showTitle: false },
+      render: (text) => (
+        <Tooltip title={text}>
+          <span style={{ fontSize: '14px' }}>{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: 'Suit',
       key: 'suit',
-      width: 200,
+      width: 180,
+      ellipsis: { showTitle: false },
       render: (_, record) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{record.suit_name}</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.suit_brand} - {record.suit_color}
+        <Tooltip title={`${record.suit_name} - ${record.suit_brand} (${record.suit_color})`}>
+          <div>
+            <div style={{ fontWeight: 500, fontSize: '14px' }}>{record.suit_name}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {record.suit_brand} • {record.suit_color}
+            </div>
           </div>
-        </div>
+        </Tooltip>
       )
     },
     {
       title: 'Size',
       dataIndex: 'size',
       key: 'size',
-      width: 80,
-      render: (size) => <Tag>{size}</Tag>
+      width: 70,
+      render: (size) => <Tag style={{ fontSize: '12px' }}>{size}</Tag>
     },
     {
       title: 'Period',
       key: 'period',
-      width: 200,
+      width: 140,
+      responsive: ['md'],
       render: (_, record) => (
         <div>
-          <div>{dayjs(record.rental_start_date).format('MMM DD, YYYY')}</div>
+          <div style={{ fontSize: '13px' }}>{dayjs(record.rental_start_date).format('MMM DD')}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            to {dayjs(record.rental_end_date).format('MMM DD, YYYY')}
-          </div>
-          <div style={{ fontSize: '12px', color: '#1890ff' }}>
-            ({record.rental_days} days)
+            to {dayjs(record.rental_end_date).format('MMM DD')} ({record.rental_days}d)
           </div>
         </div>
       )
@@ -161,14 +170,14 @@ const RentalManagement = () => {
       title: 'Amount',
       dataIndex: 'total_amount',
       key: 'total_amount',
-      width: 120,
-      render: (amount) => <span style={{ fontWeight: 'bold' }}>LKR {parseFloat(amount).toFixed(2)}</span>
+      width: 110,
+      render: (amount) => <span style={{ fontWeight: '600', fontSize: '14px', color: '#52c41a' }}>LKR {parseFloat(amount).toFixed(0)}</span>
     },
     {
       title: 'Status',
       dataIndex: 'rental_status',
       key: 'rental_status',
-      width: 120,
+      width: 100,
       filters: [
         { text: 'Reserved', value: 'reserved' },
         { text: 'Active', value: 'active' },
@@ -178,7 +187,7 @@ const RentalManagement = () => {
       ],
       onFilter: (value, record) => record.rental_status === value,
       render: (status) => (
-        <Tag color={getStatusColor(status)} style={{ fontWeight: 500 }}>
+        <Tag color={getStatusColor(status)} style={{ fontWeight: 500, fontSize: '12px' }}>
           {status?.toUpperCase()}
         </Tag>
       )
@@ -187,10 +196,11 @@ const RentalManagement = () => {
       title: 'Payment',
       dataIndex: 'payment_status',
       key: 'payment_status',
-      width: 120,
+      width: 95,
+      responsive: ['lg'],
       render: (status) => (
-        <Tag color={getPaymentStatusColor(status)}>
-          {status?.toUpperCase()}
+        <Tag color={getPaymentStatusColor(status)} style={{ fontSize: '12px' }}>
+          {status?.replace('-', ' ').toUpperCase()}
         </Tag>
       )
     },
@@ -198,22 +208,25 @@ const RentalManagement = () => {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 180,
+      width: 120,
       render: (_, record) => (
         <Space size="small">
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          >
-            View
-          </Button>
-          <Button 
-            type="link"
-            onClick={() => handleUpdateStatus(record)}
-          >
-            Status
-          </Button>
+          <Tooltip title="View Details">
+            <Button 
+              type="text" 
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record)}
+              style={{ color: '#f093fb' }}
+            />
+          </Tooltip>
+          <Tooltip title="Update Status">
+            <Button 
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => handleUpdateStatus(record)}
+              style={{ color: '#1890ff' }}
+            />
+          </Tooltip>
         </Space>
       )
     }
@@ -245,11 +258,13 @@ const RentalManagement = () => {
             dataSource={rentals}
             rowKey="id"
             loading={loading}
-            scroll={{ x: 1400 }}
+            size="middle"
+            scroll={{ x: 1000 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} rentals`
+              showTotal: (total) => `Total ${total} rentals`,
+              responsive: true
             }}
           />
         </Card>

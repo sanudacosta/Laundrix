@@ -11,7 +11,8 @@ import {
   InputNumber,
   Select,
   message,
-  Descriptions
+  Descriptions,
+  Tooltip
 } from 'antd';
 import { 
   DollarOutlined,
@@ -104,34 +105,45 @@ const PaymentManagement = () => {
       title: 'Payment ID',
       dataIndex: 'id',
       key: 'id',
-      width: 100,
-      render: (text) => <span style={{ fontWeight: 'bold' }}>#{text}</span>
+      width: 95,
+      render: (text) => <span style={{ fontWeight: '600', color: '#fa709a', fontSize: '14px' }}>#{text}</span>
     },
     {
       title: 'Transaction ID',
       dataIndex: 'transaction_id',
       key: 'transaction_id',
-      width: 180,
-      render: (text) => <Tag color="blue">{text}</Tag>
+      width: 150,
+      ellipsis: { showTitle: false },
+      render: (text) => (
+        <Tooltip title={text}>
+          <Tag color="blue" style={{ fontSize: '12px' }}>{text}</Tag>
+        </Tooltip>
+      )
     },
     {
       title: 'Customer',
       dataIndex: 'customer_name',
       key: 'customer_name',
-      width: 150,
+      width: 130,
+      ellipsis: { showTitle: false },
+      render: (text) => (
+        <Tooltip title={text}>
+          <span style={{ fontSize: '14px' }}>{text}</span>
+        </Tooltip>
+      )
     },
     {
       title: 'Type',
       dataIndex: 'payment_type',
       key: 'payment_type',
-      width: 100,
+      width: 90,
       filters: [
         { text: 'Order', value: 'order' },
         { text: 'Rental', value: 'rental' },
       ],
       onFilter: (value, record) => record.payment_type === value,
       render: (type) => (
-        <Tag color={type === 'order' ? 'blue' : 'green'}>
+        <Tag color={type === 'order' ? 'blue' : 'green'} style={{ fontSize: '12px' }}>
           {type?.toUpperCase()}
         </Tag>
       )
@@ -140,7 +152,8 @@ const PaymentManagement = () => {
       title: 'Method',
       dataIndex: 'payment_method',
       key: 'payment_method',
-      width: 120,
+      width: 100,
+      responsive: ['md'],
       filters: [
         { text: 'Cash', value: 'cash' },
         { text: 'Card', value: 'card' },
@@ -149,7 +162,7 @@ const PaymentManagement = () => {
       ],
       onFilter: (value, record) => record.payment_method === value,
       render: (method) => (
-        <Tag color={getPaymentMethodColor(method)}>
+        <Tag color={getPaymentMethodColor(method)} style={{ fontSize: '12px' }}>
           {method?.toUpperCase().replace('_', ' ')}
         </Tag>
       )
@@ -158,14 +171,14 @@ const PaymentManagement = () => {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      width: 130,
-      render: (amount) => <span style={{ fontWeight: 'bold', fontSize: '15px' }}>LKR {parseFloat(amount).toFixed(2)}</span>
+      width: 110,
+      render: (amount) => <span style={{ fontWeight: '600', fontSize: '14px', color: '#52c41a' }}>LKR {parseFloat(amount).toFixed(0)}</span>
     },
     {
       title: 'Status',
       dataIndex: 'payment_status',
       key: 'payment_status',
-      width: 130,
+      width: 105,
       filters: [
         { text: 'Pending', value: 'pending' },
         { text: 'Completed', value: 'completed' },
@@ -174,7 +187,7 @@ const PaymentManagement = () => {
       ],
       onFilter: (value, record) => record.payment_status === value,
       render: (status) => (
-        <Tag color={getStatusColor(status)} style={{ fontWeight: 500 }}>
+        <Tag color={getStatusColor(status)} style={{ fontWeight: 500, fontSize: '12px' }}>
           {status?.toUpperCase()}
         </Tag>
       )
@@ -183,31 +196,34 @@ const PaymentManagement = () => {
       title: 'Date',
       dataIndex: 'created_at',
       key: 'created_at',
-      width: 150,
-      render: (date) => dayjs(date).format('MMM DD, YYYY HH:mm')
+      width: 100,
+      responsive: ['lg'],
+      render: (date) => <span style={{ fontSize: '13px' }}>{dayjs(date).format('MMM DD, YYYY')}</span>
     },
     {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 180,
+      width: 120,
       render: (_, record) => (
-        <Space>
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
-          >
-            View
-          </Button>
-          {(record.payment_status === 'completed' || record.payment_status === 'paid') && (
+        <Space size="small">
+          <Tooltip title="View Details">
             <Button 
-              type="link"
-              icon={<UndoOutlined />}
-              onClick={() => handleRefund(record)}
-            >
-              Refund
-            </Button>
+              type="text" 
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record)}
+              style={{ color: '#fa709a' }}
+            />
+          </Tooltip>
+          {(record.payment_status === 'completed' || record.payment_status === 'paid') && (
+            <Tooltip title="Process Refund">
+              <Button 
+                type="text"
+                icon={<UndoOutlined />}
+                onClick={() => handleRefund(record)}
+                style={{ color: '#ff4d4f' }}
+              />
+            </Tooltip>
           )}
         </Space>
       )
@@ -240,11 +256,13 @@ const PaymentManagement = () => {
             dataSource={payments}
             rowKey="id"
             loading={loading}
-            scroll={{ x: 1400 }}
+            size="middle"
+            scroll={{ x: 1000 }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `Total ${total} payments`
+              showTotal: (total) => `Total ${total} payments`,
+              responsive: true
             }}
           />
         </Card>
