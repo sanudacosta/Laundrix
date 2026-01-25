@@ -1,4 +1,4 @@
--- Laundrix Database Schema
+-- Laundrix Database Schema V2 - Restructured for Size Selection
 -- Drop database if exists and create fresh
 DROP DATABASE IF EXISTS laundrix_db;
 CREATE DATABASE laundrix_db;
@@ -90,31 +90,47 @@ CREATE TABLE suit_categories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Suit Inventory Table
-CREATE TABLE suits (
+-- Suit Products Table (The Design/Style)
+CREATE TABLE suit_products (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    suit_code VARCHAR(50) UNIQUE NOT NULL,
+    product_code VARCHAR(50) UNIQUE NOT NULL,
     category_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    description TEXT,
-    size VARCHAR(20) NOT NULL,
-    color VARCHAR(50) NOT NULL,
     brand VARCHAR(100),
-    condition_status ENUM('excellent', 'good', 'fair', 'needs-repair') DEFAULT 'excellent',
+    description TEXT,
+    color VARCHAR(50) NOT NULL,
     rental_price_per_day DECIMAL(10, 2) NOT NULL,
     deposit_amount DECIMAL(10, 2) NOT NULL,
     purchase_price DECIMAL(10, 2),
     image_url VARCHAR(255),
-    is_available BOOLEAN DEFAULT TRUE,
-    total_rentals INT DEFAULT 0,
-    last_rented_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES suit_categories(id),
-    INDEX idx_suit_code (suit_code),
+    INDEX idx_product_code (product_code),
     INDEX idx_category (category_id),
+    INDEX idx_active (is_active)
+);
+
+-- Suit Inventory Table (Actual Physical Items by Size)
+CREATE TABLE suit_inventory (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    size VARCHAR(20) NOT NULL,
+    suit_code VARCHAR(50) UNIQUE NOT NULL,
+    condition_status ENUM('excellent', 'good', 'fair', 'needs-repair') DEFAULT 'excellent',
+    is_available BOOLEAN DEFAULT TRUE,
+    total_rentals INT DEFAULT 0,
+    last_rented_date DATE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES suit_products(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_product_size (product_id, size),
+    INDEX idx_product (product_id),
+    INDEX idx_size (size),
     INDEX idx_available (is_available),
-    INDEX idx_size (size)
+    INDEX idx_suit_code (suit_code)
 );
 
 -- Suit Rentals Table
@@ -122,7 +138,7 @@ CREATE TABLE suit_rentals (
     id INT PRIMARY KEY AUTO_INCREMENT,
     rental_number VARCHAR(50) UNIQUE NOT NULL,
     customer_id INT NOT NULL,
-    suit_id INT NOT NULL,
+    inventory_id INT NOT NULL,
     assigned_employee_id INT,
     rental_start_date DATE NOT NULL,
     rental_end_date DATE NOT NULL,
@@ -137,43 +153,64 @@ CREATE TABLE suit_rentals (
     payment_status ENUM('pending', 'paid', 'partially-refunded', 'fully-refunded') NOT NULL DEFAULT 'pending',
     rental_status ENUM('reserved', 'active', 'returned', 'overdue', 'cancelled') NOT NULL DEFAULT 'reserved',
     return_condition ENUM('excellent', 'good', 'fair', 'damaged') DEFAULT NULL,
+    occasion VARCHAR(100),
+    delivery_address TEXT,
+    special_instructions TEXT,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (suit_id) REFERENCES suits(id),
+    FOREIGN KEY (inventory_id) REFERENCES suit_inventory(id),
     FOREIGN KEY (assigned_employee_id) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_rental_number (rental_number),
     INDEX idx_customer (customer_id),
-    INDEX idx_suit (suit_id),
+    INDEX idx_inventory (inventory_id),
     INDEX idx_status (rental_status),
     INDEX idx_dates (rental_start_date, rental_end_date)
+);
+
+-- Rental Cart Table (Temporary storage before booking)
+CREATE TABLE rental_cart (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    size VARCHAR(20) NOT NULL,
+    rental_start_date DATE NOT NULL,
+    rental_end_date DATE NOT NULL,
+    rental_days INT NOT NULL,
+    rental_amount DECIMAL(10, 2) NOT NULL,
+    deposit_amount DECIMAL(10, 2) NOT NULL,
+    occasion VARCHAR(100),
+    delivery_address TEXT,
+    special_instructions TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES suit_products(id) ON DELETE CASCADE,
+    INDEX idx_customer (customer_id),
+    INDEX idx_product (product_id)
 );
 
 -- Payments Table
 CREATE TABLE payments (
     id INT PRIMARY KEY AUTO_INCREMENT,
     payment_number VARCHAR(50) UNIQUE NOT NULL,
-    user_id INT NOT NULL,
+    customer_id INT NOT NULL,
     order_id INT,
     rental_id INT,
-    payment_type ENUM('laundry', 'rental', 'deposit', 'refund') NOT NULL,
-    payment_method ENUM('cash', 'card', 'online', 'bank-transfer') NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    transaction_id VARCHAR(100),
+    payment_method ENUM('cash', 'card', 'bank-transfer', 'online') NOT NULL,
     payment_status ENUM('pending', 'completed', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
-    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    transaction_reference VARCHAR(100),
+    payment_date DATETIME,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (order_id) REFERENCES laundry_orders(id) ON DELETE SET NULL,
     FOREIGN KEY (rental_id) REFERENCES suit_rentals(id) ON DELETE SET NULL,
     INDEX idx_payment_number (payment_number),
-    INDEX idx_user (user_id),
-    INDEX idx_order (order_id),
-    INDEX idx_rental (rental_id),
-    INDEX idx_type (payment_type),
+    INDEX idx_customer (customer_id),
     INDEX idx_status (payment_status)
 );
 
@@ -181,36 +218,27 @@ CREATE TABLE payments (
 CREATE TABLE notifications (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    type ENUM('order', 'rental', 'payment', 'general', 'reminder') NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
+    type ENUM('order', 'rental', 'payment', 'system') NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    send_email BOOLEAN DEFAULT FALSE,
-    email_sent BOOLEAN DEFAULT FALSE,
-    send_sms BOOLEAN DEFAULT FALSE,
-    sms_sent BOOLEAN DEFAULT FALSE,
-    related_order_id INT,
-    related_rental_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    read_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (related_order_id) REFERENCES laundry_orders(id) ON DELETE SET NULL,
-    FOREIGN KEY (related_rental_id) REFERENCES suit_rentals(id) ON DELETE SET NULL,
     INDEX idx_user (user_id),
-    INDEX idx_read (is_read),
-    INDEX idx_type (type)
+    INDEX idx_read (is_read)
 );
 
 -- Order Status History Table
 CREATE TABLE order_status_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    changed_by INT NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
+    changed_by INT,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES laundry_orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (changed_by) REFERENCES users(id),
+    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_order (order_id)
 );
 
@@ -218,12 +246,13 @@ CREATE TABLE order_status_history (
 CREATE TABLE rental_status_history (
     id INT PRIMARY KEY AUTO_INCREMENT,
     rental_id INT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    changed_by INT NOT NULL,
+    old_status VARCHAR(50),
+    new_status VARCHAR(50) NOT NULL,
+    changed_by INT,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (rental_id) REFERENCES suit_rentals(id) ON DELETE CASCADE,
-    FOREIGN KEY (changed_by) REFERENCES users(id),
+    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL,
     INDEX idx_rental (rental_id)
 );
 
@@ -235,3 +264,10 @@ CREATE TABLE system_settings (
     description TEXT,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Insert default system settings
+INSERT INTO system_settings (setting_key, setting_value, description) VALUES
+('business_name', 'Laundrix', 'Business name'),
+('tax_rate', '8', 'Tax rate percentage'),
+('currency', 'LKR', 'Currency code'),
+('late_fee_per_day', '500', 'Late fee per day for overdue rentals');

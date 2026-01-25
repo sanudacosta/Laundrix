@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Menu, X, ChevronDown, User, LogOut, Package, Shirt, CreditCard, ShoppingBag } from 'lucide-react';
+import { rentalAPI } from '../services/apiService';
+import { Zap, Menu, X, ChevronDown, User, LogOut, Package, Shirt, CreditCard, ShoppingBag, ShoppingCart } from 'lucide-react';
 import Button from './ui/Button';
 
 const Navbar = () => {
@@ -11,6 +12,19 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = async () => {
+    if (!isAuthenticated || user?.role !== 'customer') return;
+    try {
+      const response = await rentalAPI.getCart();
+      const count = response?.data?.count || 0;
+      setCartCount(count);
+    } catch (error) {
+      // Silently fail - cart count is not critical
+      setCartCount(0);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,6 +33,15 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    fetchCartCount();
+    // Refresh cart count every 30 seconds if user is authenticated
+    if (isAuthenticated && user?.role === 'customer') {
+      const interval = setInterval(fetchCartCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout();
@@ -112,6 +135,18 @@ const Navbar = () => {
                 >
                   <Shirt className="w-4 h-4" />
                   <span>Rent Suits</span>
+                </Link>
+                <Link
+                  to="/customer/cart"
+                  className="relative flex items-center space-x-1 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Cart</span>
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}
@@ -269,6 +304,19 @@ const Navbar = () => {
                 >
                   <Shirt className="w-5 h-5" />
                   <span>Rent Suits</span>
+                </Link>
+                <Link
+                  to="/customer/cart"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="relative flex items-center space-x-2 px-4 py-3 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Cart</span>
+                  {cartCount > 0 && (
+                    <span className="ml-auto bg-white text-green-600 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
                 </Link>
               </>
             )}

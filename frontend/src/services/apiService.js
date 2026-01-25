@@ -29,11 +29,26 @@ export const rentalAPI = {
   getAllSuits: (params) => api.get('/rental/suits', { params }),
   getSuitById: (id) => api.get(`/rental/suits/${id}`),
   getCategories: () => api.get('/rental/categories'),
-  createRental: (data) => api.post('/rental/rentals', data),
   getMyRentals: () => api.get('/rental/my-rentals'),
   getAllRentals: (params) => api.get('/rental/rentals', { params }),
   getRentalById: (id) => api.get(`/rental/rentals/${id}`),
   updateRentalStatus: (id, data) => api.put(`/rental/rentals/${id}/status`, data),
+  
+  // Size availability
+  getAvailableSizes: (productId, startDate, endDate) => 
+    api.get(`/rental/suits/${productId}/sizes`, { 
+      params: { start_date: startDate, end_date: endDate } 
+    }),
+  
+  // Cart functionality
+  addToCart: (data) => api.post('/rental/cart', data),
+  getCart: () => api.get('/rental/cart'),
+  removeFromCart: (id) => api.delete(`/rental/cart/${id}`),
+  clearCart: () => api.delete('/rental/cart'),
+  checkout: () => api.post('/rental/cart/checkout'),
+  
+  // Direct booking (skip cart)
+  createRental: (data) => api.post('/rental/rentals', data),
 };
 
 // Payment APIs

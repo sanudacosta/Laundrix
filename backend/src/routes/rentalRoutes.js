@@ -1,31 +1,38 @@
 import express from 'express';
+import { authenticate, authorize } from '../middleware/auth.js';
 import {
   getAllSuits,
   getSuitById,
+  getAvailableSizes,
+  addToCart,
+  getCart,
+  removeFromCart,
+  clearCart,
+  checkout,
   createRental,
   getMyRentals,
-  getAllRentals,
-  getRentalById,
-  updateRentalStatus,
   getCategories
 } from '../controllers/rentalController.js';
-import { authenticate, authorize } from '../middleware/auth.js';
-import { validateSuitRental, validate } from '../middleware/validators.js';
 
 const router = express.Router();
 
-// Public/Customer routes
+// Public routes (available to all authenticated users)
 router.get('/suits', getAllSuits);
-router.get('/suits/:id', getSuitById);
 router.get('/categories', getCategories);
 
-// Customer routes
-router.post('/rentals', authenticate, authorize('customer'), validateSuitRental, validate, createRental);
-router.get('/my-rentals', authenticate, authorize('customer'), getMyRentals);
+// Specific routes must come before parameterized routes
+router.get('/suits/:productId/sizes', authenticate, getAvailableSizes);
+router.get('/suits/:id', getSuitById);
 
-// Admin/Employee routes
-router.get('/rentals', authenticate, authorize('admin', 'employee'), getAllRentals);
-router.get('/rentals/:id', authenticate, getRentalById);
-router.put('/rentals/:id/status', authenticate, authorize('admin', 'employee'), updateRentalStatus);
+// Cart routes (customer only)
+router.post('/cart', authenticate, authorize('customer'), addToCart);
+router.get('/cart', authenticate, authorize('customer'), getCart);
+router.delete('/cart/:id', authenticate, authorize('customer'), removeFromCart);
+router.delete('/cart', authenticate, authorize('customer'), clearCart);
+router.post('/cart/checkout', authenticate, authorize('customer'), checkout);
+
+// Rental routes (customer only)
+router.post('/rentals', authenticate, authorize('customer'), createRental);
+router.get('/my-rentals', authenticate, authorize('customer'), getMyRentals);
 
 export default router;

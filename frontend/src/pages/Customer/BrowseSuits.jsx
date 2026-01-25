@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
-import { Search, Filter, Shirt, Calendar, MapPin, X, ChevronLeft, ChevronRight, XCircle } from 'lucide-react';
+import { Search, Filter, Shirt, Calendar, MapPin, X, ChevronLeft, ChevronRight, XCircle, ShoppingCart, Info } from 'lucide-react';
 import { rentalAPI } from '../../services/apiService';
 
 const BrowseSuits = () => {
@@ -8,9 +8,12 @@ const BrowseSuits = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState([5000, 14000]);
+  const [priceRange, setPriceRange] = useState([1500, 3000]);
   const [selectedSuit, setSelectedSuit] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [availableSizes, setAvailableSizes] = useState([]);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [fetchingSizes, setFetchingSizes] = useState(false);
   const [bookingData, setBookingData] = useState({
     start_date: '',
     end_date: '',
@@ -22,6 +25,10 @@ const BrowseSuits = () => {
   useEffect(() => {
     fetchSuits();
   }, []);
+
+  useEffect(() => {
+    fetchAvailableSizes();
+  }, [bookingData.start_date, bookingData.end_date, selectedSuit, showBookingModal]);
 
   const fetchSuits = async () => {
     try {
@@ -39,6 +46,39 @@ const BrowseSuits = () => {
     }
   };
 
+  const fetchAvailableSizes = async () => {
+    if (!selectedSuit || !bookingData.start_date || !bookingData.end_date) {
+      setAvailableSizes([]);
+      return;
+    }
+
+    try {
+      setFetchingSizes(true);
+      console.log('Fetching sizes for:', { productId: selectedSuit.id, start: bookingData.start_date, end: bookingData.end_date });
+      const response = await rentalAPI.getAvailableSizes(
+        selectedSuit.id,
+        bookingData.start_date,
+        bookingData.end_date
+      );
+      console.log('Available sizes response:', response);
+      const sizesData = response?.data?.data || [];
+      console.log('Sizes data:', sizesData);
+      setAvailableSizes(sizesData);
+      // Auto-select first available size
+      if (sizesData.length > 0 && !selectedSize) {
+        setSelectedSize(sizesData[0].size);
+      } else if (sizesData.length === 0) {
+        setSelectedSize('');
+      }
+    } catch (error) {
+      console.error('Error fetching sizes:', error);
+      setAvailableSizes([]);
+      setSelectedSize('');
+    } finally {
+      setFetchingSizes(false);
+    }
+  };
+
   const categories = ['all', 'Wedding', 'Business', 'Casual', 'Formal', 'Party'];
 
   const filteredSuits = (Array.isArray(suits) ? suits : []).filter(suit => {
@@ -46,7 +86,8 @@ const BrowseSuits = () => {
                          suit.category_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || suit.category_name === selectedCategory;
     const matchesPrice = suit.rental_price_per_day >= priceRange[0] && suit.rental_price_per_day <= priceRange[1];
-    const isAvailable = suit.is_available === true || suit.is_available === 1;
+    // In V2 schema, availability is determined by available_size_count from inventory
+    const isAvailable = suit.available_size_count > 0;
     
     return matchesSearch && matchesCategory && matchesPrice && isAvailable;
   });
@@ -63,7 +104,7 @@ const BrowseSuits = () => {
     if (!selectedSuit) return { rental: 0, deposit: 0, total: 0 };
     const days = calculateDuration();
     const rental = selectedSuit.rental_price_per_day * days;
-    const deposit = 10000; // Fixed deposit
+    const deposit = 3000; // Fixed deposit
     return {
       rental: rental.toFixed(2),
       deposit: deposit.toFixed(2),
@@ -79,16 +120,26 @@ const BrowseSuits = () => {
         return;
       }
 
+      if (!selectedSize) {
+        alert('Please select a size');
+        return;
+      }
+
       await rentalAPI.createRental({
-        suit_id: selectedSuit.id,
-        ...bookingData,
-        rental_amount: parseFloat(calculateTotal().rental),
-        deposit_amount: parseFloat(calculateTotal().deposit)
+        product_id: selectedSuit.id,
+        size: selectedSize,
+        start_date: bookingData.start_date,
+        end_date: bookingData.end_date,
+        occasion: bookingData.occasion,
+        delivery_address: bookingData.delivery_address,
+        special_instructions: bookingData.special_instructions
       });
 
       alert('Suit booked successfully!');
       setShowBookingModal(false);
       setSelectedSuit(null);
+      setSelectedSize('');
+      setAvailableSizes([]);
       setBookingData({
         start_date: '',
         end_date: '',
@@ -100,6 +151,47 @@ const BrowseSuits = () => {
     } catch (error) {
       console.error('Error booking suit:', error);
       alert(error.response?.data?.error || 'Failed to book suit');
+    }
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      const days = calculateDuration();
+      if (days <= 0) {
+        alert('Please select valid dates');
+        return;
+      }
+
+      if (!selectedSize) {
+        alert('Please select a size');
+        return;
+      }
+
+      await rentalAPI.addToCart({
+        product_id: selectedSuit.id,
+        size: selectedSize,
+        rental_start_date: bookingData.start_date,
+        rental_end_date: bookingData.end_date,
+        occasion: bookingData.occasion,
+        delivery_address: bookingData.delivery_address,
+        special_instructions: bookingData.special_instructions
+      });
+
+      alert('Added to cart successfully!');
+      setShowBookingModal(false);
+      setSelectedSuit(null);
+      setSelectedSize('');
+      setAvailableSizes([]);
+      setBookingData({
+        start_date: '',
+        end_date: '',
+        occasion: '',
+        delivery_address: '',
+        special_instructions: ''
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert(error.response?.data?.message || 'Failed to add to cart. Please try again.');
     }
   };
 
@@ -175,18 +267,18 @@ const BrowseSuits = () => {
               <div className="flex items-center space-x-4">
                 <input
                   type="range"
-                  min="5000"
-                  max="14000"
-                  step="1000"
+                  min="1500"
+                  max="3000"
+                  step="100"
                   value={priceRange[0]}
                   onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
                   className="flex-1"
                 />
                 <input
                   type="range"
-                  min="5000"
-                  max="14000"
-                  step="1000"
+                  min="1500"
+                  max="3000"
+                  step="100"
                   value={priceRange[1]}
                   onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                   className="flex-1"
@@ -239,7 +331,9 @@ const BrowseSuits = () => {
                   </div>
                   
                   <p className="text-gray-600 mb-2">{suit.category_name}</p>
-                  <p className="text-sm text-gray-500 mb-4">Size: {suit.size}</p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    {suit.available_size_count} {suit.available_size_count === 1 ? 'size' : 'sizes'} available
+                  </p>
                   
                   <div className="flex items-center justify-between">
                     <div>
@@ -268,64 +362,133 @@ const BrowseSuits = () => {
 
       {/* Suit Details Modal */}
       {selectedSuit && !showBookingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-5xl w-full my-8 shadow-2xl">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b bg-gray-50 rounded-t-2xl flex items-center justify-between">
+              <div>
                 <h2 className="text-2xl font-bold text-gray-900">{selectedSuit.brand}</h2>
-                <button
-                  onClick={() => setSelectedSuit(null)}
-                  className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center"
-                >
-                  <XCircle className="w-5 h-5" />
-                </button>
+                <p className="text-sm text-gray-500">{selectedSuit.color} | {selectedSuit.category_name}</p>
               </div>
+              <button
+                onClick={() => setSelectedSuit(null)}
+                className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
             </div>
 
-            <div className="p-6">
-              {selectedSuit.image_url ? (
-                <img
-                  src={selectedSuit.image_url}
-                  alt={selectedSuit.brand}
-                  className="w-full h-96 object-cover rounded-xl mb-6"
-                />
-              ) : (
-                <div className="w-full h-96 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center rounded-xl mb-6">
-                  <Shirt className="w-32 h-32 text-blue-400" />
-                </div>
-              )}
-
+            {/* Modal Body - Split Layout */}
+            <div className="grid lg:grid-cols-2 gap-6 p-6">
+              {/* Left Side - Image */}
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 mb-1">Category</h3>
-                  <p className="text-lg text-gray-900">{selectedSuit.category_name}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 mb-1">Size</h3>
-                  <p className="text-lg text-gray-900">{selectedSuit.size}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 mb-1">Rental Price</h3>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(selectedSuit.rental_price_per_day)} <span className="text-sm text-gray-500">/ day</span>
-                  </p>
-                </div>
-
-                {selectedSuit.description && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-500 mb-1">Description</h3>
-                    <p className="text-gray-700">{selectedSuit.description}</p>
+                {selectedSuit.image_url ? (
+                  <img
+                    src={selectedSuit.image_url}
+                    alt={selectedSuit.brand}
+                    className="w-full h-[500px] object-cover rounded-xl shadow-lg"
+                  />
+                ) : (
+                  <div className="w-full h-[500px] bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center rounded-xl shadow-lg">
+                    <Shirt className="w-40 h-40 text-blue-400" />
                   </div>
                 )}
 
-                <button
-                  onClick={() => setShowBookingModal(true)}
-                  className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 mt-6"
-                >
-                  Book This Suit
-                </button>
+                {/* Quick Info Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-600 mb-1">Category</p>
+                    <p className="font-bold text-sm text-gray-900">{selectedSuit.category_name}</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-600 mb-1">Available Sizes</p>
+                    <p className="font-bold text-lg text-gray-900">{selectedSuit.available_size_count}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side - Details */}
+              <div className="space-y-6">
+                {/* Price Section */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+                  <p className="text-sm opacity-90 mb-1">Rental Price</p>
+                  <div className="flex items-baseline">
+                    <span className="text-4xl font-bold">{formatCurrency(selectedSuit.rental_price_per_day)}</span>
+                    <span className="text-lg ml-2 opacity-75">/ day</span>
+                  </div>
+                  <p className="text-sm mt-2 opacity-90">Deposit: {formatCurrency(selectedSuit.deposit_amount)}</p>
+                </div>
+
+                {/* Suit Details */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Brand</h3>
+                      <p className="text-lg font-semibold text-gray-900">{selectedSuit.brand}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Color</h3>
+                      <p className="text-lg text-gray-900">{selectedSuit.color}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Sizes</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSuit.available_sizes ? (
+                        selectedSuit.available_sizes.split(',').map((size, index) => (
+                          <span key={index} className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold text-sm">
+                            {size.trim()}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-500">Select dates to see available sizes</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedSuit.description && (
+                    <div>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description</h3>
+                      <p className="text-gray-700 leading-relaxed">{selectedSuit.description}</p>
+                    </div>
+                  )}
+
+                  {/* Additional Info */}
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Condition:</span>
+                      <span className="font-semibold text-gray-900 capitalize">{selectedSuit.condition_status}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Availability:</span>
+                      <span className="font-semibold text-green-600">Available Now</span>
+                    </div>
+                    {selectedSuit.total_rentals > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Total Rentals:</span>
+                        <span className="font-semibold text-gray-900">{selectedSuit.total_rentals}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3 pt-4">
+                  <button
+                    onClick={() => setShowBookingModal(true)}
+                    className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                  >
+                    <Calendar className="w-5 h-5" />
+                    <span>Book This Suit</span>
+                  </button>
+                  <button
+                    onClick={() => setSelectedSuit(null)}
+                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                  >
+                    Continue Browsing
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -334,27 +497,58 @@ const BrowseSuits = () => {
 
       {/* Booking Modal */}
       {showBookingModal && selectedSuit && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b sticky top-0 bg-white z-10">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-3xl w-full my-8 shadow-2xl">
+            {/* Modal Header - Sticky */}
+            <div className="sticky top-0 z-10 px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Book {selectedSuit.brand}</h2>
+                <div className="text-white flex-1 pr-4">
+                  <h2 className="text-2xl font-bold">Book: {selectedSuit.brand}</h2>
+                  <p className="text-sm opacity-90">Complete the details below to reserve your suit</p>
+                </div>
                 <button
                   onClick={() => {
                     setShowBookingModal(false);
                     setSelectedSuit(null);
                   }}
-                  className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center"
+                  className="flex-shrink-0 w-10 h-10 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
                 >
-                  <XCircle className="w-5 h-5" />
+                  <X className="w-6 h-6 text-white" />
                 </button>
               </div>
             </div>
 
             <div className="p-6 space-y-6">
+              {/* Suit Summary Card */}
+              <div className="bg-gray-50 rounded-xl p-4 flex items-center space-x-4">
+                {selectedSuit.image_url ? (
+                  <img
+                    src={selectedSuit.image_url}
+                    alt={selectedSuit.brand}
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                    <Shirt className="w-10 h-10 text-blue-400" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-gray-900">{selectedSuit.brand}</h3>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                    <span>{selectedSuit.category_name}</span>
+                    <span>•</span>
+                    <span>{selectedSuit.color}</span>
+                    <span>•</span>
+                    <span className="font-semibold text-blue-600">{formatCurrency(selectedSuit.rental_price_per_day)}/day</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rental Dates */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
                     Start Date *
                   </label>
                   <input
@@ -362,12 +556,13 @@ const BrowseSuits = () => {
                     value={bookingData.start_date}
                     onChange={(e) => setBookingData({ ...bookingData, start_date: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                    <Calendar className="w-4 h-4 mr-1" />
                     End Date *
                   </label>
                   <input
@@ -375,15 +570,73 @@ const BrowseSuits = () => {
                     value={bookingData.end_date}
                     onChange={(e) => setBookingData({ ...bookingData, end_date: e.target.value })}
                     min={bookingData.start_date || new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
               </div>
 
+              {/* Size Selector - Always visible with instructions */}
+              <div className="border-2 border-blue-300 bg-blue-50/50 rounded-xl p-4">
+                <label className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                  <Shirt className="w-4 h-4 mr-1" />
+                  Select Size *
+                </label>
+                
+                {!bookingData.start_date || !bookingData.end_date ? (
+                  <div className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl bg-white text-blue-700 flex items-center">
+                    <Calendar className="w-5 h-5 mr-2 flex-shrink-0" />
+                    <span>Please select rental dates above to see available sizes</span>
+                  </div>
+                ) : fetchingSizes ? (
+                  <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-500 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
+                    <span>Checking availability...</span>
+                  </div>
+                ) : availableSizes.length > 0 ? (
+                  <div>
+                    <select
+                      value={selectedSize}
+                      onChange={(e) => setSelectedSize(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors bg-white"
+                    >
+                      <option value="">Select your size</option>
+                      {availableSizes.map((sizeOption, index) => (
+                        <option key={index} value={sizeOption.size}>
+                          {sizeOption.size} - {sizeOption.condition_status}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-600 mt-1 ml-1">
+                      {availableSizes.length} {availableSizes.length === 1 ? 'size' : 'sizes'} available for these dates
+                    </p>
+                  </div>
+                ) : (
+                  <div className="w-full px-4 py-3 border-2 border-red-200 rounded-xl bg-red-50 text-red-600 flex items-center">
+                    <XCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+                    <span>No sizes available for selected dates. Please choose different dates.</span>
+                  </div>
+                )}
+                
+                {selectedSize && (
+                  <p className="text-xs text-green-600 mt-2 flex items-center font-semibold">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    Size {selectedSize} is available for your selected dates
+                  </p>
+                )}
+              </div>
+
               {calculateDuration() > 0 && (
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <p className="text-sm text-gray-600">Rental Duration</p>
-                  <p className="text-2xl font-bold text-blue-600">{calculateDuration()} days</p>
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Rental Duration</p>
+                      <p className="text-3xl font-bold text-blue-600">{calculateDuration()} days</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600 mb-1">Daily Rate</p>
+                      <p className="text-xl font-bold text-gray-900">{formatCurrency(selectedSuit.rental_price_per_day)}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -394,7 +647,7 @@ const BrowseSuits = () => {
                 <select
                   value={bookingData.occasion}
                   onChange={(e) => setBookingData({ ...bookingData, occasion: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
                 >
                   <option value="">Select occasion</option>
                   <option value="Wedding">Wedding</option>
@@ -406,15 +659,16 @@ const BrowseSuits = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                  <MapPin className="w-4 h-4 mr-1" />
                   Delivery Address *
                 </label>
                 <textarea
                   value={bookingData.delivery_address}
                   onChange={(e) => setBookingData({ ...bookingData, delivery_address: e.target.value })}
-                  placeholder="Enter delivery address..."
+                  placeholder="Enter your complete delivery address..."
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors resize-none"
                 />
               </div>
 
@@ -425,43 +679,62 @@ const BrowseSuits = () => {
                 <textarea
                   value={bookingData.special_instructions}
                   onChange={(e) => setBookingData({ ...bookingData, special_instructions: e.target.value })}
-                  placeholder="Any special requirements..."
+                  placeholder="Any special requirements or fitting notes..."
                   rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors resize-none"
                 />
               </div>
 
               {/* Price Breakdown */}
               {calculateDuration() > 0 && (
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <h3 className="font-bold text-lg text-gray-900 mb-4">Price Breakdown</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Rental ({calculateDuration()} days):</span>
-                      <span>LKR {calculateTotal().rental}</span>
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+                  <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center">
+                    <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                    Price Breakdown
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-600">Rental Fee ({calculateDuration()} days × {formatCurrency(selectedSuit.rental_price_per_day)}):</span>
+                      <span className="font-semibold text-gray-900">LKR {calculateTotal().rental}</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Security Deposit:</span>
-                      <span>LKR {calculateTotal().deposit}</span>
+                    <div className="flex justify-between text-base">
+                      <span className="text-gray-600">Security Deposit (Refundable):</span>
+                      <span className="font-semibold text-gray-900">LKR {calculateTotal().deposit}</span>
                     </div>
-                    <div className="border-t pt-2 flex justify-between font-bold text-xl text-gray-900">
-                      <span>Total:</span>
-                      <span className="text-blue-600">LKR {calculateTotal().total}</span>
+                    <div className="border-t-2 border-gray-300 pt-3 flex justify-between items-center">
+                      <span className="text-lg font-bold text-gray-900">Total Amount:</span>
+                      <span className="text-2xl font-bold text-blue-600">LKR {calculateTotal().total}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-3">
-                    * Security deposit will be refunded upon safe return of the suit
-                  </p>
+                  <div className="mt-4 bg-blue-50 rounded-lg p-3">
+                    <p className="text-xs text-blue-800 flex items-start">
+                      <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>Security deposit will be fully refunded upon safe return of the suit in good condition.</span>
+                    </p>
+                  </div>
                 </div>
               )}
 
-              <button
-                onClick={handleBooking}
-                disabled={!bookingData.start_date || !bookingData.end_date || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                Confirm Booking
-              </button>
+              <div className="grid md:grid-cols-2 gap-4">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={!bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold text-lg hover:from-green-700 hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Add to Cart</span>
+                </button>
+                <button
+                  onClick={handleBooking}
+                  disabled={!bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+                >
+                  <span>Book Now</span>
+                  {calculateDuration() > 0 && (
+                    <span className="text-sm font-normal opacity-90">(LKR {calculateTotal().total})</span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

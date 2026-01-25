@@ -14,6 +14,7 @@ import UnauthorizedPage from './pages/UnauthorizedPage';
 import MyAccount from './pages/Customer/MyAccount';
 import PlaceOrder from './pages/Customer/PlaceOrder';
 import BrowseSuits from './pages/Customer/BrowseSuits';
+import Cart from './pages/Customer/Cart';
 import MyOrders from './pages/Customer/MyOrders';
 import MyRentals from './pages/Customer/MyRentals';
 import MyPayments from './pages/Customer/MyPayments';
@@ -87,6 +88,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute roles={['customer']}>
             <BrowseSuits />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customer/cart"
+        element={
+          <ProtectedRoute roles={['customer']}>
+            <Cart />
           </ProtectedRoute>
         }
       />
