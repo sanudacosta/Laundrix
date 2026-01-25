@@ -18,14 +18,14 @@ TRUNCATE TABLE system_settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Seed Users (password for all: Password123!)
--- Password hash for 'Password123!': $2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5
+-- Password hash for 'Password123!': $2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2
 INSERT INTO users (full_name, email, password, phone, role, address, is_active, email_verified) VALUES
-('Admin User', 'admin@laundrix.lk', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234567', 'admin', '123 Galle Road, Colombo 03', TRUE, TRUE),
-('Kamal Employee', 'kamal@laundrix.lk', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234568', 'employee', '456 Duplication Road, Colombo 04', TRUE, TRUE),
-('Nisha Employee', 'nisha@laundrix.lk', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234569', 'employee', '789 Baseline Road, Colombo 09', TRUE, TRUE),
-('Roshan Silva', 'roshan@example.com', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234570', 'customer', '321 Ward Place, Colombo 07', TRUE, TRUE),
-('Thanuja Fernando', 'thanuja@example.com', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234571', 'customer', '654 Havelock Road, Colombo 05', TRUE, TRUE),
-('Sandun Perera', 'sandun@example.com', '$2a$10$rVYQnX5N3qQJwCxZvY8x5.ZXZyX5X5X5X5X5X5X5X5X5X5X5X5X5', '+94771234572', 'customer', '987 Bauddhaloka Mawatha, Colombo 04', TRUE, TRUE);
+('Admin User', 'admin@laundrix.lk', '$2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2', '+94771234567', 'admin', '123 Galle Road, Colombo 03', TRUE, TRUE),
+('Kamal Employee', 'kamal@laundrix.lk', '$2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2', '+94771234568', 'employee', '456 Duplication Road, Colombo 04', TRUE, TRUE),
+('Nisha Employee', 'nisha@laundrix.lk', '$2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2', '+94771234569', 'employee', '789 Baseline Road, Colombo 09', TRUE, TRUE),
+('Roshan Silva', 'roshan@example.com', '$2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2', '+94771234570', 'customer', '321 Ward Place, Colombo 07', TRUE, TRUE),
+('Thanuja Fernando', 'thanuja@example.com', '$2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2', '+94771234571', 'customer', '654 Havelock Road, Colombo 05', TRUE, TRUE),
+('Sandun Perera', 'sandun@example.com', '$2a$10$aKIXOgI76/SWkFc.IPaFlO47/7UuU9qFCs6QPo7abSINxoRuvYjT2', '+94771234572', 'customer', '987 Bauddhaloka Mawatha, Colombo 04', TRUE, TRUE);
 
 -- Seed Cleaning Types (LKR pricing)
 INSERT INTO cleaning_types (name, description, base_price, is_active) VALUES
