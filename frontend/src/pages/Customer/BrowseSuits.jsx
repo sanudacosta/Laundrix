@@ -3,8 +3,10 @@ import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import { Search, Filter, Shirt, Calendar, MapPin, X, ChevronLeft, ChevronRight, XCircle, ShoppingCart, Info } from 'lucide-react';
 import { rentalAPI } from '../../services/apiService';
+import { useAuth } from '../../context/AuthContext';
 
 const BrowseSuits = () => {
+  const { user } = useAuth();
   const [suits, setSuits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +17,9 @@ const BrowseSuits = () => {
   const [availableSizes, setAvailableSizes] = useState([]);
   const [selectedSize, setSelectedSize] = useState('');
   const [fetchingSizes, setFetchingSizes] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
   const [bookingData, setBookingData] = useState({
     start_date: '',
     end_date: '',
@@ -104,8 +109,8 @@ const BrowseSuits = () => {
   const calculateTotal = () => {
     if (!selectedSuit) return { rental: 0, deposit: 0, total: 0 };
     const days = calculateDuration();
-    const rental = selectedSuit.rental_price_per_day * days;
-    const deposit = 3000; // Fixed deposit
+    const rental = parseFloat(selectedSuit.rental_price_per_day) * days;
+    const deposit = parseFloat(selectedSuit.deposit_amount || 3000);
     return {
       rental: rental.toFixed(2),
       deposit: deposit.toFixed(2),
@@ -113,18 +118,28 @@ const BrowseSuits = () => {
     };
   };
 
-  const handleBooking = async () => {
-    try {
-      const days = calculateDuration();
-      if (days <= 0) {
-        alert('Please select valid dates');
-        return;
-      }
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!bookingData.start_date) errors.start_date = 'Start date is required';
+    if (!bookingData.end_date) errors.end_date = 'End date is required';
+    if (calculateDuration() <= 0) errors.dates = 'End date must be after start date';
+    if (!selectedSize) errors.size = 'Please select a size';
+    if (!bookingData.occasion) errors.occasion = 'Please select an occasion';
+    if (!bookingData.delivery_address?.trim()) errors.delivery_address = 'Delivery address is required';
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-      if (!selectedSize) {
-        alert('Please select a size');
-        return;
-      }
+  const handleBooking = async () => {
+    if (!validateForm()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
 
       await rentalAPI.createRental({
         product_id: selectedSuit.id,
@@ -141,6 +156,7 @@ const BrowseSuits = () => {
       setSelectedSuit(null);
       setSelectedSize('');
       setAvailableSizes([]);
+      setValidationErrors({});
       setBookingData({
         start_date: '',
         end_date: '',
@@ -152,21 +168,19 @@ const BrowseSuits = () => {
     } catch (error) {
       console.error('Error booking suit:', error);
       toast.error(error.response?.data?.error || 'Failed to book suit');
+    } finally {
+      setBookingLoading(false);
     }
   };
 
   const handleAddToCart = async () => {
-    try {
-      const days = calculateDuration();
-      if (days <= 0) {
-        toast.error('Please select valid dates');
-        return;
-      }
+    if (!validateForm()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
 
-      if (!selectedSize) {
-        toast.error('Please select a size');
-        return;
-      }
+    try {
+      setAddingToCart(true);
 
       await rentalAPI.addToCart({
         product_id: selectedSuit.id,
@@ -183,6 +197,7 @@ const BrowseSuits = () => {
       setSelectedSuit(null);
       setSelectedSize('');
       setAvailableSizes([]);
+      setValidationErrors({});
       setBookingData({
         start_date: '',
         end_date: '',
@@ -193,6 +208,8 @@ const BrowseSuits = () => {
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error(error.response?.data?.message || 'Failed to add to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -347,6 +364,13 @@ const BrowseSuits = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedSuit(suit);
+                        setBookingData({
+                          start_date: '',
+                          end_date: '',
+                          occasion: '',
+                          delivery_address: user?.address || '',
+                          special_instructions: ''
+                        });
                         setShowBookingModal(true);
                       }}
                       className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700"
@@ -477,7 +501,16 @@ const BrowseSuits = () => {
                 {/* Action Buttons */}
                 <div className="space-y-3 pt-4">
                   <button
-                    onClick={() => setShowBookingModal(true)}
+                    onClick={() => {
+                      setBookingData({
+                        start_date: '',
+                        end_date: '',
+                        occasion: '',
+                        delivery_address: user?.address || '',
+                        special_instructions: ''
+                      });
+                      setShowBookingModal(true);
+                    }}
                     className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
                   >
                     <Calendar className="w-5 h-5" />
@@ -498,44 +531,66 @@ const BrowseSuits = () => {
 
       {/* Booking Modal */}
       {showBookingModal && selectedSuit && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-3xl w-full my-8 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh]">
             {/* Modal Header - Sticky */}
-            <div className="sticky top-0 z-10 px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl">
+            <div className="flex-shrink-0 px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div className="text-white flex-1 pr-4">
-                  <h2 className="text-2xl font-bold">Book: {selectedSuit.brand}</h2>
-                  <p className="text-sm opacity-90">Complete the details below to reserve your suit</p>
+                  <h2 className="text-xl font-bold">{selectedSuit.brand}</h2>
+                  <p className="text-xs opacity-90">Fill in the details to complete your booking</p>
                 </div>
                 <button
                   onClick={() => {
+                    if (bookingData.start_date || bookingData.end_date || bookingData.occasion || bookingData.delivery_address) {
+                      toast.info('Your booking details have been discarded', {
+                        position: 'top-center',
+                        autoClose: 2000
+                      });
+                    }
                     setShowBookingModal(false);
                     setSelectedSuit(null);
+                    setValidationErrors({});
                   }}
-                  className="flex-shrink-0 w-10 h-10 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                  aria-label="Close modal"
+                  className="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/30 flex items-center justify-center transition-colors"
                 >
                   <X className="w-6 h-6 text-white" />
                 </button>
               </div>
+              
+              {/* Progress Indicator */}
+              <div className="mt-4 flex items-center space-x-2">
+                <div className={`h-1 flex-1 rounded-full transition-all ${
+                  bookingData.start_date && bookingData.end_date ? 'bg-white' : 'bg-white/30'
+                }`}></div>
+                <div className={`h-1 flex-1 rounded-full transition-all ${
+                  selectedSize ? 'bg-white' : 'bg-white/30'
+                }`}></div>
+                <div className={`h-1 flex-1 rounded-full transition-all ${
+                  bookingData.occasion && bookingData.delivery_address ? 'bg-white' : 'bg-white/30'
+                }`}></div>
+              </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1 p-6 space-y-4">
               {/* Suit Summary Card */}
-              <div className="bg-gray-50 rounded-xl p-4 flex items-center space-x-4">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 flex items-center space-x-3 border-2 border-blue-200 shadow-sm">
                 {selectedSuit.image_url ? (
                   <img
                     src={selectedSuit.image_url}
                     alt={selectedSuit.brand}
-                    className="w-20 h-20 object-cover rounded-lg"
+                    className="w-16 h-16 object-cover rounded-lg shadow-md"
                   />
                 ) : (
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                    <Shirt className="w-10 h-10 text-blue-400" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg flex items-center justify-center shadow-md">
+                    <Shirt className="w-8 h-8 text-blue-600" />
                   </div>
                 )}
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg text-gray-900">{selectedSuit.brand}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                  <h3 className="font-bold text-sm text-gray-900">{selectedSuit.brand}</h3>
+                  <div className="flex items-center space-x-2 text-xs text-gray-600 mt-1">
                     <span>{selectedSuit.category_name}</span>
                     <span>•</span>
                     <span>{selectedSuit.color}</span>
@@ -545,60 +600,107 @@ const BrowseSuits = () => {
                 </div>
               </div>
 
+              {/* Step 1: Rental Dates */}
+              <div className="bg-white rounded-xl border-2 border-gray-200 p-4">
+                <div className="flex items-center mb-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold mr-2">1</div>
+                  <h3 className="font-semibold text-sm text-gray-900">Select Rental Dates</h3>
+                </div>
               {/* Rental Dates */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    Start Date *
+                  <label className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+                    <Calendar className="w-3.5 h-3.5 mr-1" />
+                    Start Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={bookingData.start_date}
-                    onChange={(e) => setBookingData({ ...bookingData, start_date: e.target.value })}
+                    onChange={(e) => {
+                      setBookingData({ ...bookingData, start_date: e.target.value });
+                      setValidationErrors({...validationErrors, start_date: null});
+                    }}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                    className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm ${
+                      validationErrors.start_date ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                    }`}
+                    aria-invalid={!!validationErrors.start_date}
+                    aria-describedby={validationErrors.start_date ? 'start-date-error' : undefined}
                   />
+                  {validationErrors.start_date && (
+                    <p id="start-date-error" className="text-xs text-red-600 mt-1 flex items-center">
+                      <XCircle className="w-3 h-3 mr-1" />
+                      {validationErrors.start_date}
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                    <Calendar className="w-4 h-4 mr-1" />
-                    End Date *
+                  <label className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+                    <Calendar className="w-3.5 h-3.5 mr-1" />
+                    End Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={bookingData.end_date}
-                    onChange={(e) => setBookingData({ ...bookingData, end_date: e.target.value })}
+                    onChange={(e) => {
+                      setBookingData({ ...bookingData, end_date: e.target.value });
+                      setValidationErrors({...validationErrors, end_date: null, dates: null});
+                    }}
                     min={bookingData.start_date || new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                    className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm ${
+                      validationErrors.end_date || validationErrors.dates ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                    }`}
+                    aria-invalid={!!(validationErrors.end_date || validationErrors.dates)}
+                    aria-describedby={(validationErrors.end_date || validationErrors.dates) ? 'end-date-error' : undefined}
                   />
+                  {(validationErrors.end_date || validationErrors.dates) && (
+                    <p id="end-date-error" className="text-xs text-red-600 mt-1 flex items-center">
+                      <XCircle className="w-3 h-3 mr-1" />
+                      {validationErrors.end_date || validationErrors.dates}
+                    </p>
+                  )}
                 </div>
               </div>
+              </div>
 
+              {/* Step 2: Size Selection */}
+              <div className="bg-white rounded-xl border-2 border-gray-200 p-4">
+                <div className="flex items-center mb-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 ${
+                    bookingData.start_date && bookingData.end_date ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>2</div>
+                  <h3 className="font-semibold text-sm text-gray-900">Choose Your Size</h3>
+                </div>
               {/* Size Selector - Always visible with instructions */}
-              <div className="border-2 border-blue-300 bg-blue-50/50 rounded-xl p-4">
-                <label className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
-                  <Shirt className="w-4 h-4 mr-1" />
-                  Select Size *
+              <div className="border-2 border-blue-300 bg-blue-50/50 rounded-lg p-3">
+                <label className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
+                  <Shirt className="w-3.5 h-3.5 mr-1" />
+                  Select Size <span className="text-red-500">*</span>
                 </label>
                 
                 {!bookingData.start_date || !bookingData.end_date ? (
-                  <div className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl bg-white text-blue-700 flex items-center">
-                    <Calendar className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <div className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg bg-white text-blue-700 flex items-center text-sm">
+                    <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
                     <span>Please select rental dates above to see available sizes</span>
                   </div>
                 ) : fetchingSizes ? (
-                  <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-500 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"></div>
+                  <div className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg bg-white text-gray-500 flex items-center justify-center text-sm">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
                     <span>Checking availability...</span>
                   </div>
                 ) : availableSizes.length > 0 ? (
                   <div>
                     <select
                       value={selectedSize}
-                      onChange={(e) => setSelectedSize(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors bg-white"
+                      onChange={(e) => {
+                        setSelectedSize(e.target.value);
+                        setValidationErrors({...validationErrors, size: null});
+                      }}
+                      className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all bg-white text-sm ${
+                        validationErrors.size ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-blue-300 focus:border-blue-500 focus:ring-blue-200'
+                      }`}
+                      aria-invalid={!!validationErrors.size}
                     >
                       <option value="">Select your size</option>
                       {availableSizes.map((sizeOption, index) => (
@@ -607,48 +709,65 @@ const BrowseSuits = () => {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-600 mt-1 ml-1">
-                      {availableSizes.length} {availableSizes.length === 1 ? 'size' : 'sizes'} available for these dates
-                    </p>
+                    {validationErrors.size && (
+                      <p className="text-xs text-red-600 mt-1.5 ml-1 flex items-center">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        {validationErrors.size}
+                      </p>
+                    )}
+                    {!validationErrors.size && (
+                      <p className="text-xs text-green-600 mt-1.5 ml-1 font-medium">
+                        ✓ {availableSizes.length} {availableSizes.length === 1 ? 'size' : 'sizes'} available for these dates
+                      </p>
+                    )}
                   </div>
                 ) : (
-                  <div className="w-full px-4 py-3 border-2 border-red-200 rounded-xl bg-red-50 text-red-600 flex items-center">
-                    <XCircle className="w-5 h-5 mr-2 flex-shrink-0" />
+                  <div className="w-full px-3 py-2.5 border-2 border-red-200 rounded-lg bg-red-50 text-red-600 flex items-center text-sm">
+                    <XCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                     <span>No sizes available for selected dates. Please choose different dates.</span>
                   </div>
                 )}
-                
-                {selectedSize && (
-                  <p className="text-xs text-green-600 mt-2 flex items-center font-semibold">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    Size {selectedSize} is available for your selected dates
-                  </p>
-                )}
+              </div>
               </div>
 
               {calculateDuration() > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3 border border-blue-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Rental Duration</p>
-                      <p className="text-3xl font-bold text-blue-600">{calculateDuration()} days</p>
+                      <p className="text-xs text-gray-600 mb-0.5">Rental Duration</p>
+                      <p className="text-xl font-bold text-blue-600">{calculateDuration()} days</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-600 mb-1">Daily Rate</p>
-                      <p className="text-xl font-bold text-gray-900">{formatCurrency(selectedSuit.rental_price_per_day)}</p>
+                      <p className="text-xs text-gray-600 mb-0.5">Daily Rate</p>
+                      <p className="text-base font-bold text-gray-900">{formatCurrency(selectedSuit.rental_price_per_day)}</p>
                     </div>
                   </div>
                 </div>
               )}
 
+              {/* Step 3: Booking Details */}
+              <div className="bg-white rounded-xl border-2 border-gray-200 p-4">
+                <div className="flex items-center mb-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 ${
+                    selectedSize ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>3</div>
+                  <h3 className="font-semibold text-sm text-gray-900">Booking Details</h3>
+                </div>
+                <div className="space-y-3">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Occasion *
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                  Occasion <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={bookingData.occasion}
-                  onChange={(e) => setBookingData({ ...bookingData, occasion: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                  onChange={(e) => {
+                    setBookingData({ ...bookingData, occasion: e.target.value });
+                    setValidationErrors({...validationErrors, occasion: null});
+                  }}
+                  className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm ${
+                    validationErrors.occasion ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                  }`}
+                  aria-invalid={!!validationErrors.occasion}
                 >
                   <option value="">Select occasion</option>
                   <option value="Wedding">Wedding</option>
@@ -657,85 +776,142 @@ const BrowseSuits = () => {
                   <option value="Formal Event">Formal Event</option>
                   <option value="Other">Other</option>
                 </select>
+                {validationErrors.occasion && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    {validationErrors.occasion}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  Delivery Address *
+                <label className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+                  <MapPin className="w-3.5 h-3.5 mr-1" />
+                  Delivery Address <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={bookingData.delivery_address}
-                  onChange={(e) => setBookingData({ ...bookingData, delivery_address: e.target.value })}
+                  onChange={(e) => {
+                    setBookingData({ ...bookingData, delivery_address: e.target.value });
+                    setValidationErrors({...validationErrors, delivery_address: null});
+                  }}
                   placeholder="Enter your complete delivery address..."
-                  rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                  rows="2"
+                  className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all resize-none text-sm ${
+                    validationErrors.delivery_address ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
+                  }`}
+                  aria-invalid={!!validationErrors.delivery_address}
                 />
+                {validationErrors.delivery_address && (
+                  <p className="text-xs text-red-600 mt-1 flex items-center">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    {validationErrors.delivery_address}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Special Instructions (Optional)
                 </label>
                 <textarea
                   value={bookingData.special_instructions}
                   onChange={(e) => setBookingData({ ...bookingData, special_instructions: e.target.value })}
                   placeholder="Any special requirements or fitting notes..."
-                  rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                  rows="2"
+                  className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none text-sm"
                 />
+              </div>
+              </div>
               </div>
 
               {/* Price Breakdown */}
               {calculateDuration() > 0 && (
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
-                  <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center">
-                    <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
-                    Price Breakdown
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-sm">
+                  <h3 className="font-semibold text-sm text-gray-900 mb-3 flex items-center">
+                    <div className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold mr-2">✓</div>
+                    Price Summary
                   </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-base">
-                      <span className="text-gray-600">Rental Fee ({calculateDuration()} days × {formatCurrency(selectedSuit.rental_price_per_day)}):</span>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-700">Rental ({calculateDuration()} days × {formatCurrency(selectedSuit.rental_price_per_day)}):</span>
                       <span className="font-semibold text-gray-900">LKR {calculateTotal().rental}</span>
                     </div>
-                    <div className="flex justify-between text-base">
-                      <span className="text-gray-600">Security Deposit (Refundable):</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-700">Security Deposit (Refundable):</span>
                       <span className="font-semibold text-gray-900">LKR {calculateTotal().deposit}</span>
                     </div>
-                    <div className="border-t-2 border-gray-300 pt-3 flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">Total Amount:</span>
-                      <span className="text-2xl font-bold text-blue-600">LKR {calculateTotal().total}</span>
+                    <div className="border-t-2 border-green-300 pt-2 mt-2 flex justify-between items-center">
+                      <span className="text-sm font-bold text-gray-900">Total Amount:</span>
+                      <span className="text-lg font-bold text-green-600">LKR {calculateTotal().total}</span>
                     </div>
                   </div>
-                  <div className="mt-4 bg-blue-50 rounded-lg p-3">
-                    <p className="text-xs text-blue-800 flex items-start">
-                      <Info className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>Security deposit will be fully refunded upon safe return of the suit in good condition.</span>
+                  <div className="mt-3 bg-green-100 rounded-lg p-2.5">
+                    <p className="text-xs text-green-800 flex items-start">
+                      <Info className="w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5" />
+                      <span>Deposit refunded upon safe return. Payment required at checkout.</span>
                     </p>
                   </div>
                 </div>
               )}
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-3 pt-2">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold text-lg hover:from-green-700 hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+                  disabled={addingToCart || !bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-2.5 rounded-lg font-semibold text-sm hover:from-green-700 hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+                  aria-label="Add to cart"
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Add to Cart</span>
+                  {addingToCart ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Add to Cart</span>
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={handleBooking}
-                  disabled={!bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+                  disabled={bookingLoading || !bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 rounded-lg font-semibold text-sm hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
+                  aria-label="Book now"
                 >
-                  <span>Book Now</span>
-                  {calculateDuration() > 0 && (
-                    <span className="text-sm font-normal opacity-90">(LKR {calculateTotal().total})</span>
+                  {bookingLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Booking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Book Now</span>
+                      {calculateDuration() > 0 && (
+                        <span className="text-xs font-normal opacity-90">(LKR {calculateTotal().total})</span>
+                      )}
+                    </>
                   )}
                 </button>
               </div>
+              
+              {Object.keys(validationErrors).length > 0 && (
+                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 flex items-start">
+                  <XCircle className="w-4 h-4 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs text-red-700">
+                    <p className="font-semibold mb-1">Please complete all required fields:</p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {validationErrors.start_date && <li>Select a start date</li>}
+                      {validationErrors.end_date && <li>Select an end date</li>}
+                      {validationErrors.dates && <li>End date must be after start date</li>}
+                      {validationErrors.size && <li>Choose a size</li>}
+                      {validationErrors.occasion && <li>Select an occasion</li>}
+                      {validationErrors.delivery_address && <li>Enter delivery address</li>}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

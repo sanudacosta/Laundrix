@@ -192,8 +192,8 @@ export const addToCart = async (req, res, next) => {
     }
     
     // Calculate amounts
-    const rentalAmount = product.rental_price_per_day * rentalDays;
-    const depositAmount = product.deposit_amount;
+    const rentalAmount = parseFloat(product.rental_price_per_day) * rentalDays;
+    const depositAmount = parseFloat(product.deposit_amount);
     
     // Check if item already in cart
     const [existing] = await db.query(
@@ -460,8 +460,8 @@ export const createRental = async (req, res, next) => {
     const inventoryId = available[0].id;
     
     // Calculate amounts
-    const rentalAmount = product.rental_price_per_day * rentalDays;
-    const depositAmount = product.deposit_amount;
+    const rentalAmount = parseFloat(product.rental_price_per_day) * rentalDays;
+    const depositAmount = parseFloat(product.deposit_amount);
     const totalAmount = rentalAmount + depositAmount;
     
     // Generate rental number
