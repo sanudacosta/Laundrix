@@ -30,26 +30,50 @@ const MyRentals = () => {
   };
 
   const getStatusColor = (status) => {
+    const statusLower = status?.toLowerCase();
     const colors = {
-      'Active': 'bg-green-100 text-green-700',
-      'Pending': 'bg-yellow-100 text-yellow-700',
-      'Completed': 'bg-gray-100 text-gray-700',
-      'Overdue': 'bg-red-100 text-red-700',
-      'Cancelled': 'bg-gray-100 text-gray-500'
+      'active': 'bg-green-100 text-green-700',
+      'reserved': 'bg-yellow-100 text-yellow-700',
+      'pending': 'bg-yellow-100 text-yellow-700',
+      'returned': 'bg-gray-100 text-gray-700',
+      'completed': 'bg-gray-100 text-gray-700',
+      'overdue': 'bg-red-100 text-red-700',
+      'cancelled': 'bg-gray-100 text-gray-500'
     };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return colors[statusLower] || 'bg-gray-100 text-gray-700';
   };
 
   const getStatusIcon = (status) => {
+    const statusLower = status?.toLowerCase();
     const icons = {
-      'Active': CheckCircle,
-      'Pending': Clock,
-      'Completed': CheckCircle,
-      'Overdue': AlertCircle,
-      'Cancelled': XCircle
+      'active': CheckCircle,
+      'reserved': Clock,
+      'pending': Clock,
+      'returned': CheckCircle,
+      'completed': CheckCircle,
+      'overdue': AlertCircle,
+      'cancelled': XCircle
     };
-    const Icon = icons[status] || Shirt;
-    return <Icon className="w-5 h-5" />;
+    const Icon = icons[statusLower] || Shirt;
+    return <Icon className="w-4 h-4" />;
+  };
+
+  const getProgressSteps = (status) => {
+    const steps = [
+      { label: 'Reserved', key: 'reserved' },
+      { label: 'Active', key: 'active' },
+      { label: 'Returned', key: 'returned' }
+    ];
+    
+    const currentStatus = status?.toLowerCase();
+    const statusOrder = { 'reserved': 0, 'active': 1, 'returned': 2 };
+    const currentIndex = statusOrder[currentStatus] ?? 0;
+    
+    return steps.map((step, index) => ({
+      ...step,
+      isActive: index <= currentIndex,
+      isCurrent: index === currentIndex
+    }));
   };
 
   const calculateDaysRemaining = (endDate) => {
@@ -65,9 +89,10 @@ const MyRentals = () => {
   };
 
   const filteredRentals = (Array.isArray(rentals) ? rentals : []).filter(rental => {
+    const status = rental.rental_status?.toLowerCase();
     if (activeFilter === 'all') return true;
-    if (activeFilter === 'active') return rental.rental_status === 'Active' || rental.rental_status === 'Pending';
-    if (activeFilter === 'past') return rental.rental_status === 'Completed' || rental.rental_status === 'Cancelled';
+    if (activeFilter === 'active') return status === 'active' || status === 'reserved';
+    if (activeFilter === 'past') return status === 'returned' || status === 'cancelled';
     return true;
   });
 
@@ -130,51 +155,55 @@ const MyRentals = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRentals.map(rental => {
-              const daysRemaining = calculateDaysRemaining(rental.end_date);
-              const isOverdue = daysRemaining < 0 && rental.rental_status === 'Active';
+              const daysRemaining = calculateDaysRemaining(rental.rental_end_date);
+              const isOverdue = daysRemaining < 0 && rental.rental_status?.toLowerCase() === 'active';
+              const displayStatus = isOverdue ? 'Overdue' : rental.rental_status;
 
               return (
                 <div
                   key={rental.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setSelectedRental(rental)}
                 >
-                  {rental.suit?.image_url ? (
+                  {rental.image_url ? (
                     <img
-                      src={rental.suit.image_url}
-                      alt={rental.suit.brand}
-                      className="w-full h-48 object-cover"
+                      src={rental.image_url}
+                      alt={rental.brand}
+                      className="w-full h-52 object-contain bg-gray-50"
                     />
                   ) : (
-                    <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                      <Shirt className="w-20 h-20 text-blue-400" />
+                    <div className="w-full h-52 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                      <Shirt className="w-16 h-16 text-blue-400" />
                     </div>
                   )}
 
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="font-bold text-lg text-gray-900">
-                        {rental.suit?.brand || 'Suit'}
-                      </h3>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center space-x-1 ${
-                        getStatusColor(isOverdue ? 'Overdue' : rental.rental_status)
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-bold text-sm text-gray-900">
+                          {rental.brand || 'Suit'}
+                        </h3>
+                        <p className="text-xs text-gray-600">{rental.name}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium inline-flex items-center space-x-1 ${
+                        getStatusColor(displayStatus)
                       }`}>
-                        {getStatusIcon(isOverdue ? 'Overdue' : rental.rental_status)}
-                        <span>{isOverdue ? 'Overdue' : rental.rental_status}</span>
+                        {getStatusIcon(displayStatus)}
+                        <span className="capitalize">{displayStatus}</span>
                       </span>
                     </div>
 
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="w-4 h-4 mr-2" />
+                    <div className="space-y-1.5 mb-3">
+                      <div className="flex items-center text-xs text-gray-600">
+                        <Calendar className="w-3 h-3 mr-1.5" />
                         <span>
-                          {new Date(rental.start_date).toLocaleDateString()} - {new Date(rental.end_date).toLocaleDateString()}
+                          {new Date(rental.rental_start_date).toLocaleDateString()} - {new Date(rental.rental_end_date).toLocaleDateString()}
                         </span>
                       </div>
 
-                      {rental.rental_status === 'Active' && (
-                        <div className="flex items-center text-sm">
-                          <Clock className="w-4 h-4 mr-2" />
+                      {rental.rental_status?.toLowerCase() === 'active' && (
+                        <div className="flex items-center text-xs">
+                          <Clock className="w-3 h-3 mr-1.5" />
                           <span className={daysRemaining < 3 ? 'text-red-600 font-medium' : 'text-gray-600'}>
                             {daysRemaining > 0 
                               ? `${daysRemaining} days remaining`
@@ -184,26 +213,26 @@ const MyRentals = () => {
                         </div>
                       )}
 
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2" />
+                      <div className="flex items-center text-xs text-gray-600">
+                        <MapPin className="w-3 h-3 mr-1.5" />
                         <span className="truncate">{rental.delivery_address}</span>
                       </div>
                     </div>
 
-                    <div className="border-t pt-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-600">Rental Amount</span>
-                        <span className="font-bold text-gray-900">
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs text-gray-600">Rental Amount</span>
+                        <span className="font-bold text-sm text-gray-900">
                           {formatCurrency(rental.rental_amount)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Deposit</span>
-                        <span className={`font-medium ${
-                          rental.deposit_status === 'Refunded' ? 'text-green-600' : 'text-gray-900'
+                        <span className="text-xs text-gray-600">Deposit</span>
+                        <span className={`font-medium text-sm ${
+                          rental.deposit_refunded > 0 ? 'text-green-600' : 'text-gray-900'
                         }`}>
                           {formatCurrency(rental.deposit_amount)}
-                          {rental.deposit_status === 'Refunded' && (
+                          {rental.deposit_refunded > 0 && (
                             <span className="text-xs ml-1">(Refunded)</span>
                           )}
                         </span>
@@ -237,25 +266,57 @@ const MyRentals = () => {
 
             <div className="p-6 space-y-6">
               {/* Suit Info */}
-              {selectedRental.suit?.image_url && (
+              {selectedRental.image_url && (
                 <img
-                  src={selectedRental.suit.image_url}
-                  alt={selectedRental.suit.brand}
-                  className="w-full h-64 object-cover rounded-xl"
+                  src={selectedRental.image_url}
+                  alt={selectedRental.brand}
+                  className="w-full h-80 object-contain bg-gray-50 rounded-xl"
                 />
               )}
 
               <div>
                 <h3 className="font-bold text-gray-900 mb-2">
-                  {selectedRental.suit?.brand || 'Suit'}
+                  {selectedRental.brand || 'Suit'} - {selectedRental.color}
                 </h3>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center space-x-1 ${
                   getStatusColor(selectedRental.rental_status)
                 }`}>
                   {getStatusIcon(selectedRental.rental_status)}
-                  <span>{selectedRental.rental_status}</span>
+                  <span className="capitalize">{selectedRental.rental_status}</span>
                 </span>
               </div>
+
+              {/* Progress Steps */}
+              {!['returned', 'cancelled'].includes(selectedRental.rental_status?.toLowerCase()) && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="font-bold text-gray-900 mb-4">Rental Progress</h3>
+                  <div className="flex items-center justify-between">
+                    {getProgressSteps(selectedRental.rental_status).map((step, index) => (
+                      <div key={step.key} className="flex items-center flex-1">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                            step.isActive 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gray-200 text-gray-400'
+                          }`}>
+                            {step.isActive ? <CheckCircle className="w-5 h-5" /> : index + 1}
+                          </div>
+                          <span className={`text-sm mt-1.5 font-medium ${
+                            step.isCurrent ? 'text-blue-600' : step.isActive ? 'text-gray-700' : 'text-gray-400'
+                          }`}>
+                            {step.label}
+                          </span>
+                        </div>
+                        {index < 2 && (
+                          <div className={`flex-1 h-1 mx-2 rounded ${
+                            step.isActive ? 'bg-blue-600' : 'bg-gray-200'
+                          }`} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Rental Details */}
               <div className="bg-gray-50 rounded-xl p-4">
@@ -263,11 +324,11 @@ const MyRentals = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Start Date</p>
-                    <p className="font-medium">{new Date(selectedRental.start_date).toLocaleDateString()}</p>
+                    <p className="font-medium">{new Date(selectedRental.rental_start_date).toLocaleDateString()}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 mb-1">End Date</p>
-                    <p className="font-medium">{new Date(selectedRental.end_date).toLocaleDateString()}</p>
+                    <p className="font-medium">{new Date(selectedRental.rental_end_date).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
@@ -280,7 +341,7 @@ const MyRentals = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Suit Size</p>
-                  <p className="font-medium">{selectedRental.suit?.size || 'N/A'}</p>
+                  <p className="font-medium">{selectedRental.size || 'N/A'}</p>
                 </div>
               </div>
 
@@ -311,9 +372,9 @@ const MyRentals = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Deposit Status</span>
                     <span className={`font-medium ${
-                      selectedRental.deposit_status === 'Refunded' ? 'text-green-600' : 'text-yellow-600'
+                      selectedRental.deposit_refunded > 0 ? 'text-green-600' : 'text-yellow-600'
                     }`}>
-                      {selectedRental.deposit_status}
+                      {selectedRental.deposit_refunded > 0 ? 'Refunded' : 'Held'}
                     </span>
                   </div>
                   <div className="border-t pt-2 flex justify-between font-bold text-lg">
@@ -321,7 +382,7 @@ const MyRentals = () => {
                     <span className="text-blue-600">
                       {formatCurrency(
                         parseFloat(selectedRental.rental_amount) + 
-                        (selectedRental.deposit_status !== 'Refunded' ? parseFloat(selectedRental.deposit_amount) : 0)
+                        (selectedRental.deposit_refunded > 0 ? 0 : parseFloat(selectedRental.deposit_amount))
                       )}
                     </span>
                   </div>
@@ -329,7 +390,7 @@ const MyRentals = () => {
               </div>
 
               {/* Action Button */}
-              {selectedRental.rental_status === 'Completed' && (
+              {selectedRental.rental_status?.toLowerCase() === 'returned' && (
                 <button
                   onClick={() => {
                     window.location.href = '/browse-suits';

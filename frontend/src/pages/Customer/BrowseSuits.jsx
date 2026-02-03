@@ -332,7 +332,7 @@ const BrowseSuits = () => {
                   <img
                     src={suit.image_url}
                     alt={suit.brand}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-64 object-contain bg-gray-50"
                   />
                 ) : (
                   <div className="w-full h-64 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
@@ -411,7 +411,7 @@ const BrowseSuits = () => {
                   <img
                     src={selectedSuit.image_url}
                     alt={selectedSuit.brand}
-                    className="w-full h-[500px] object-cover rounded-xl shadow-lg"
+                    className="w-full h-[500px] object-contain bg-gray-50 rounded-xl shadow-lg"
                   />
                 ) : (
                   <div className="w-full h-[500px] bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center rounded-xl shadow-lg">

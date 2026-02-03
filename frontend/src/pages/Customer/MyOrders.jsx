@@ -74,9 +74,32 @@ const MyOrders = () => {
   });
 
   const getOrderProgress = (status) => {
-    const stages = ['Pending', 'Picked Up', 'Processing', 'Quality Check', 'Out for Delivery', 'Completed'];
-    const currentIndex = stages.indexOf(status);
-    return ((currentIndex + 1) / stages.length) * 100;
+    const stages = {
+      'pending': 0,
+      'in-progress': 33,
+      'ready': 66,
+      'completed': 100,
+      'cancelled': 0
+    };
+    return stages[status?.toLowerCase()] || 0;
+  };
+
+  const getProgressSteps = (status) => {
+    const steps = [
+      { label: 'Pending', key: 'pending' },
+      { label: 'In Progress', key: 'in-progress' },
+      { label: 'Ready', key: 'ready' },
+      { label: 'Completed', key: 'completed' }
+    ];
+    
+    const currentStatus = status?.toLowerCase();
+    const currentIndex = steps.findIndex(s => s.key === currentStatus);
+    
+    return steps.map((step, index) => ({
+      ...step,
+      isActive: index <= currentIndex,
+      isCurrent: index === currentIndex
+    }));
   };
 
   if (loading) {
@@ -130,17 +153,17 @@ const MyOrders = () => {
           {filteredOrders.map((order) => (
             <div
               key={order.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Package className="w-6 h-6 text-blue-600" />
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Package className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900">Order #{order.id?.toString().padStart(6, '0')}</h3>
-                    <p className="text-sm text-gray-600">{order.cleaning_type?.name || 'Laundry Service'}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <h3 className="font-bold text-base text-gray-900">Order #{order.id?.toString().padStart(6, '0')}</h3>
+                    <p className="text-xs text-gray-600">{order.cleaning_type?.name || 'Laundry Service'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
                       Placed on {new Date(order.created_at).toLocaleDateString('en-LK', {
                         day: 'numeric',
                         month: 'short',
@@ -149,7 +172,7 @@ const MyOrders = () => {
                     </p>
                   </div>
                 </div>
-                <span className={`px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 ${
+                <span className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center space-x-1.5 ${
                   getStatusColor(order.status)
                 }`}>
                   {getStatusIcon(order.status)}
@@ -157,35 +180,54 @@ const MyOrders = () => {
                 </span>
               </div>
 
-              {/* Progress Bar */}
-              {!['Completed', 'Cancelled'].includes(order.status) && (
+              {/* Progress Steps */}
+              {!['completed', 'cancelled'].includes(order.status?.toLowerCase()) && (
                 <div className="mb-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${getOrderProgress(order.status)}%` }}
-                    />
+                  <div className="flex items-center justify-between mb-2">
+                    {getProgressSteps(order.status).map((step, index) => (
+                      <div key={step.key} className="flex items-center flex-1">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                            step.isActive 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gray-200 text-gray-400'
+                          }`}>
+                            {step.isActive ? <CheckCircle className="w-4 h-4" /> : index + 1}
+                          </div>
+                          <span className={`text-xs mt-1 font-medium ${
+                            step.isCurrent ? 'text-blue-600' : step.isActive ? 'text-gray-700' : 'text-gray-400'
+                          }`}>
+                            {step.label}
+                          </span>
+                        </div>
+                        {index < 3 && (
+                          <div className={`flex-1 h-0.5 mx-2 ${
+                            step.isActive ? 'bg-blue-600' : 'bg-gray-200'
+                          }`} />
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              <div className="grid md:grid-cols-3 gap-4 mb-4">
-                <div className="flex items-center space-x-2 text-sm">
-                  <Calendar className="w-4 h-4 text-gray-400" />
+              <div className="grid md:grid-cols-3 gap-3 mb-3">
+                <div className="flex items-center space-x-2 text-xs">
+                  <Calendar className="w-3.5 h-3.5 text-gray-400" />
                   <div>
                     <p className="text-gray-500">Pickup</p>
                     <p className="font-medium text-gray-900">{new Date(order.pickup_date).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <Truck className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center space-x-2 text-xs">
+                  <Truck className="w-3.5 h-3.5 text-gray-400" />
                   <div>
                     <p className="text-gray-500">Delivery</p>
                     <p className="font-medium text-gray-900">{new Date(order.delivery_date).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 text-sm">
-                  <TrendingUp className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center space-x-2 text-xs">
+                  <TrendingUp className="w-3.5 h-3.5 text-gray-400" />
                   <div>
                     <p className="text-gray-500">Amount</p>
                     <p className="font-medium text-gray-900">{formatCurrency(order.total_amount)}</p>
@@ -193,18 +235,18 @@ const MyOrders = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center justify-between pt-3 border-t">
                 <button
                   onClick={() => setSelectedOrder(order)}
-                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-3.5 h-3.5" />
                   <span>View Details</span>
                 </button>
                 {order.status === 'Completed' && (
                   <button
                     onClick={() => navigate('/customer/place-order')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                   >
                     Reorder
                   </button>
