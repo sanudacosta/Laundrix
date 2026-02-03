@@ -265,7 +265,7 @@ const MyOrders = () => {
 
               {/* Service Details */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-blue-600">Service Details</h4>
+                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-blue-600">Service Details</h4>
                 <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Cleaning Type</p>
@@ -288,7 +288,7 @@ const MyOrders = () => {
 
               {/* Payment Info */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-green-600">Payment Information</h4>
+                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-green-600">Payment Information</h4>
                 <div className="bg-green-50 p-4 rounded-xl border border-green-200">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-gray-700 font-medium">Order Amount</span>
@@ -309,7 +309,7 @@ const MyOrders = () => {
 
               {/* Schedule Details */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-purple-600">Schedule</h4>
+                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-purple-600">Schedule</h4>
                 <div className="grid grid-cols-2 gap-4 bg-purple-50 p-4 rounded-xl border border-purple-200">
                   <div>
                     <p className="text-sm text-gray-600 mb-1 flex items-center">
@@ -338,7 +338,7 @@ const MyOrders = () => {
 
               {/* Addresses */}
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3 text-sm uppercase tracking-wide text-orange-600">Addresses</h4>
+                <h4 className="font-semibold mb-3 text-sm uppercase tracking-wide text-orange-600">Addresses</h4>
                 <div className="space-y-3">
                   <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
                     <p className="text-sm text-gray-600 mb-2 font-semibold flex items-center">
@@ -360,7 +360,7 @@ const MyOrders = () => {
 
               {selectedOrder.special_instructions && (
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2 text-sm uppercase tracking-wide text-amber-600">Special Instructions</h4>
+                  <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-amber-600">Special Instructions</h4>
                   <p className="text-gray-900 bg-amber-50 border border-amber-200 p-4 rounded-xl text-sm leading-relaxed">{selectedOrder.special_instructions}</p>
                 </div>
               )}

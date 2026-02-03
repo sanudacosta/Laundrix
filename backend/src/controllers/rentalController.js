@@ -587,6 +587,81 @@ export const getCategories = async (req, res, next) => {
   }
 };
 
+// Update rental status
+export const updateRentalStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { 
+      rental_status, 
+      return_condition, 
+      actual_return_date,
+      damage_fee = 0,
+      late_fee = 0,
+      deposit_refunded = 0,
+      notes 
+    } = req.body;
+
+    // Verify rental exists
+    const [rentals] = await db.query('SELECT * FROM suit_rentals WHERE id = ?', [id]);
+    
+    if (rentals.length === 0) {
+      throw new AppError('Rental not found', 404);
+    }
+
+    const rental = rentals[0];
+    const oldStatus = rental.rental_status;
+
+    // Update rental
+    await db.query(
+      `UPDATE suit_rentals 
+       SET rental_status = ?, 
+           return_condition = ?,
+           actual_return_date = ?,
+           damage_fee = ?,
+           late_fee = ?,
+           deposit_refunded = ?,
+           notes = CONCAT(COALESCE(notes, ''), '\n', COALESCE(?, ''))
+       WHERE id = ?`,
+      [rental_status, return_condition, actual_return_date, damage_fee, late_fee, deposit_refunded, notes, id]
+    );
+
+    // If returned, make inventory available again
+    if (rental_status === 'returned') {
+      await db.query(
+        `UPDATE suit_inventory 
+         SET is_available = TRUE, 
+             condition_status = ?,
+             last_rented_date = ?
+         WHERE id = ?`,
+        [return_condition || 'good', actual_return_date, rental.inventory_id]
+      );
+    }
+
+    // If activated (reserved -> active), mark inventory as unavailable
+    if (rental_status === 'active' && oldStatus === 'reserved') {
+      await db.query(
+        'UPDATE suit_inventory SET is_available = FALSE WHERE id = ?',
+        [rental.inventory_id]
+      );
+    }
+
+    // Log status change in history
+    await db.query(
+      `INSERT INTO rental_status_history (rental_id, old_status, new_status, changed_by, notes)
+       VALUES (?, ?, ?, ?, ?)`,
+      [id, oldStatus, rental_status, req.user.userId, notes]
+    );
+
+    res.json({
+      success: true,
+      message: 'Rental status updated successfully',
+      data: { id, rental_status, return_condition }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getAllSuits,
   getSuitById,
@@ -599,5 +674,6 @@ export default {
   createRental,
   getAllRentals,
   getMyRentals,
-  getCategories
+  getCategories,
+  updateRentalStatus
 };

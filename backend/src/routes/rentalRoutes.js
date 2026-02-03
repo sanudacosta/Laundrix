@@ -12,7 +12,8 @@ import {
   createRental,
   getAllRentals,
   getMyRentals,
-  getCategories
+  getCategories,
+  updateRentalStatus
 } from '../controllers/rentalController.js';
 
 const router = express.Router();
@@ -38,5 +39,6 @@ router.get('/my-rentals', authenticate, authorize('customer'), getMyRentals);
 
 // Admin routes
 router.get('/rentals', authenticate, authorize('admin', 'employee'), getAllRentals);
+router.put('/rentals/:id/status', authenticate, authorize('admin', 'employee'), updateRentalStatus);
 
 export default router;

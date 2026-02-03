@@ -1,21 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { authAPI } from '../../services/apiService';
 import Navbar from '../../components/Navbar';
 import { 
-  User, Mail, Phone, MapPin, Lock, Save, Package, Shirt, CreditCard
+  User, Mail, Phone, MapPin, Lock, Save, Package, Shirt, CreditCard, X, Eye, EyeOff
 } from 'lucide-react';
 
 const MyAccount = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showToast, setShowToast] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone: '',
     address: '',
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   useEffect(() => {
@@ -29,39 +42,186 @@ const MyAccount = () => {
     }
   }, [user]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     try {
-      // TODO: API call to update profile
-      // await authAPI.updateProfile(formData);
+      setLoading(true);
+      await authAPI.updateProfile({
+        full_name: formData.full_name,
+        phone: formData.phone,
+        address: formData.address
+      });
+      
+      // Update user context
+      updateUser({
+        full_name: formData.full_name,
+        phone: formData.phone,
+        address: formData.address
+      });
+      
       setEditing(false);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('Failed to update profile. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long');
+      return;
+    }
+    
+    try {
+      setPasswordLoading(true);
+      await authAPI.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+      
+      toast.success('Password changed successfully!');
+      setShowPasswordModal(false);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error(error.response?.data?.message || 'Failed to change password');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
-      {/* Success Toast */}
-      {showToast && (
-        <div className="fixed top-20 right-4 z-50 animate-slide-in-right">
-          <div className="bg-green-600 text-white px-6 py-3 rounded-lg shadow-xl flex items-center space-x-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="font-medium">Profile updated successfully!</span>
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <Navbar />
+      
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Change Password</h2>
+              </div>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.current ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none pr-12"
+                    placeholder="Enter current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords({...showPasswords, current: !showPasswords.current})}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.new ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none pr-12"
+                    placeholder="Enter new password (min 8 characters)"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords({...showPasswords, new: !showPasswords.new})}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPasswords.confirm ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none pr-12"
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords({...showPasswords, confirm: !showPasswords.confirm})}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {passwordLoading ? 'Changing...' : 'Change Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  className="px-6 py-3 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -102,7 +262,7 @@ const MyAccount = () => {
                     type="text"
                     name="full_name"
                     value={formData.full_name}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     disabled={!editing}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       !editing ? 'bg-gray-50 cursor-not-allowed' : ''
@@ -122,7 +282,7 @@ const MyAccount = () => {
                     type="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     disabled={!editing}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       !editing ? 'bg-gray-50 cursor-not-allowed' : ''
@@ -142,7 +302,7 @@ const MyAccount = () => {
                     type="tel"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     disabled={!editing}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                       !editing ? 'bg-gray-50 cursor-not-allowed' : ''
@@ -161,7 +321,7 @@ const MyAccount = () => {
                   <textarea
                     name="address"
                     value={formData.address || ''}
-                    onChange={handleChange}
+                    onChange={handleInputChange}
                     disabled={!editing}
                     rows={3}
                     placeholder={editing ? "Enter your full address with city and postal code" : "No address provided"}
@@ -196,7 +356,10 @@ const MyAccount = () => {
               {/* Change Password */}
               {!editing && (
                 <div className="mt-8 pt-8 border-t">
-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600">
+                  <button 
+                    onClick={() => setShowPasswordModal(true)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  >
                     <Lock className="w-5 h-5" />
                     <span className="font-medium">Change Password</span>
                   </button>

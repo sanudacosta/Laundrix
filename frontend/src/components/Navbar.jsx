@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { rentalAPI } from '../services/apiService';
 import { Zap, Menu, X, ChevronDown, User, LogOut, Package, Shirt, CreditCard, ShoppingBag, ShoppingCart } from 'lucide-react';
 import Button from './ui/Button';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -169,7 +170,11 @@ const Navbar = () => {
                 </Link>
               </>
             ) : (
-              <div className="relative">
+              <>
+                {/* Notification Bell */}
+                <NotificationBell />
+                
+                <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
@@ -250,6 +255,7 @@ const Navbar = () => {
                   </>
                 )}
               </div>
+              </>
             )}
           </div>
 
