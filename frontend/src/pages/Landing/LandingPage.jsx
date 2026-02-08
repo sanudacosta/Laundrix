@@ -49,12 +49,12 @@ const LandingPage = () => {
     {
       icon: Clock,
       title: 'Real-Time Tracking',
-      description: 'Track your orders from pickup to delivery with live updates'
+      description: 'Monitor your orders from pickup to delivery with live status updates'
     },
     {
       icon: Truck,
       title: 'Free Pickup & Delivery',
-      description: 'Schedule convenient pickup and delivery at your doorstep'
+      description: 'Convenient doorstep service - we handle pickup and delivery'
     },
     {
       icon: Shield,
@@ -63,18 +63,18 @@ const LandingPage = () => {
     },
     {
       icon: CreditCard,
-      title: 'Secure Payments',
-      description: 'Multiple payment options with bank-level security'
+      title: 'Easy Online Booking',
+      description: 'Simple one-page forms - book laundry or rent suits in minutes'
     },
     {
       icon: MessageCircle,
-      title: '24/7 Support',
-      description: 'AI-powered chatbot and human support always available'
+      title: 'Email Notifications',
+      description: 'Stay updated with automated email alerts at every step'
     },
     {
       icon: TrendingUp,
-      title: 'Business Analytics',
-      description: 'Detailed reports and insights for business owners'
+      title: 'Business Insights',
+      description: 'Detailed analytics and reports for business owners'
     }
   ];
 
@@ -134,8 +134,8 @@ const LandingPage = () => {
                 <span className="text-blue-600">Made Simple</span>
               </h1>
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Experience professional laundry care and elegant suit rentals with real-time tracking, 
-                AI-powered support, and doorstep delivery.
+                Professional laundry service and designer suit rentals in just a few clicks. 
+                Easy booking, doorstep delivery, and guaranteed quality.
               </p>
 
               {/* Quick Action Buttons */}
@@ -145,7 +145,7 @@ const LandingPage = () => {
                   className="group bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
                 >
                   <Droplet className="w-5 h-5 mr-2" />
-                  Order Laundry Now
+                  Quick Laundry Order
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
@@ -153,7 +153,7 @@ const LandingPage = () => {
                   className="group bg-gradient-to-r from-gray-800 to-gray-900 text-white px-6 py-4 rounded-xl font-semibold hover:from-gray-900 hover:to-black transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
                 >
                   <Shirt className="w-5 h-5 mr-2" />
-                  Rent a Suit
+                  Browse Suits
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

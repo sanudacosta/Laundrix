@@ -34,8 +34,6 @@ const RentalManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
-  const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
-  const [statusForm] = Form.useForm();
 
   useEffect(() => {
     fetchRentals();
@@ -67,24 +65,6 @@ const RentalManagement = () => {
   const handleViewDetails = (record) => {
     setSelectedRental(record);
     setIsDetailVisible(true);
-  };
-
-  const handleUpdateStatus = (record) => {
-    setSelectedRental(record);
-    statusForm.setFieldsValue({ rental_status: record.rental_status });
-    setIsStatusModalVisible(true);
-  };
-
-  const submitStatusUpdate = async (values) => {
-    try {
-      await rentalAPI.updateRentalStatus(selectedRental.id, values);
-      message.success('Rental status updated successfully');
-      setIsStatusModalVisible(false);
-      statusForm.resetFields();
-      fetchRentals();
-    } catch (error) {
-      message.error('Failed to update status');
-    }
   };
 
   const getStatusColor = (status) => {
@@ -208,7 +188,7 @@ const RentalManagement = () => {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 120,
+      width: 80,
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="View Details">
@@ -217,14 +197,6 @@ const RentalManagement = () => {
               icon={<EyeOutlined />}
               onClick={() => handleViewDetails(record)}
               style={{ color: '#f093fb' }}
-            />
-          </Tooltip>
-          <Tooltip title="Update Status">
-            <Button 
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => handleUpdateStatus(record)}
-              style={{ color: '#1890ff' }}
             />
           </Tooltip>
         </Space>
@@ -249,8 +221,13 @@ const RentalManagement = () => {
               Rental Management
             </h1>
             <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: '15px' }}>
-              View and manage all suit rentals
+              View all suit rentals and monitor status
             </p>
+            <div style={{ marginTop: 12, padding: '12px 16px', backgroundColor: '#e6f7ff', borderRadius: '8px', border: '1px solid #91d5ff' }}>
+              <span style={{ fontSize: '13px', color: '#0050b3' }}>
+                ℹ️ <strong>Admin View:</strong> You can view rental details. Status updates are handled by employees.
+              </span>
+            </div>
           </div>
 
           <Table
@@ -360,58 +337,6 @@ const RentalManagement = () => {
               )}
             </Descriptions>
           )}
-        </Modal>
-
-        {/* Update Status Modal */}
-        <Modal
-          title="Update Rental Status"
-          open={isStatusModalVisible}
-          onCancel={() => {
-            setIsStatusModalVisible(false);
-            statusForm.resetFields();
-          }}
-          footer={null}
-        >
-          <Form
-            form={statusForm}
-            layout="vertical"
-            onFinish={submitStatusUpdate}
-          >
-            <Form.Item
-              label="New Status"
-              name="rental_status"
-              rules={[{ required: true, message: 'Please select status' }]}
-            >
-              <Select size="large" placeholder="Select new status">
-                <Option value="reserved">Reserved</Option>
-                <Option value="active">Active</Option>
-                <Option value="returned">Returned</Option>
-                <Option value="overdue">Overdue</Option>
-                <Option value="cancelled">Cancelled</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              label="Notes (Optional)"
-              name="notes"
-            >
-              <TextArea rows={3} placeholder="Add any notes about the status change" />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-                <Button onClick={() => {
-                  setIsStatusModalVisible(false);
-                  statusForm.resetFields();
-                }}>
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit" size="large">
-                  Update Status
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
         </Modal>
       </div>
     </AdminLayout>

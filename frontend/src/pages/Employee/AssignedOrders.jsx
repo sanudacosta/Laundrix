@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Tag, Button, Modal, Select, message } from 'antd';
-import { ShoppingOutlined } from '@ant-design/icons';
+import { Card, Table, Tag, Button, Modal, Select, message, Space, Descriptions, Input, Tooltip } from 'antd';
+import { ShoppingOutlined, EyeOutlined, ThunderboltOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { orderAPI } from '../../services/apiService';
 import EmployeeLayout from '../../components/EmployeeLayout';
 import dayjs from 'dayjs';
+
+const { TextArea } = Input;
 
 const AssignedOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [newStatus, setNewStatus] = useState('');
+  const [statusNotes, setStatusNotes] = useState('');
 
   useEffect(() => {
     fetchAssignedOrders();
@@ -32,15 +36,39 @@ const AssignedOrders = () => {
   const handleUpdateStatus = (order) => {
     setSelectedOrder(order);
     setNewStatus(order.status);
+    setStatusNotes('');
     setStatusModalVisible(true);
+  };
+
+  const handleViewDetails = (order) => {
+    setSelectedOrder(order);
+    setDetailsModalVisible(true);
+  };
+
+  const handleQuickAction = async (order, status) => {
+    try {
+      setLoading(true);
+      await orderAPI.updateOrderStatus(order.id, { status, notes: `Quick action: ${status}` });
+      message.success(`Order marked as ${status.replace('-', ' ')}`);
+      fetchAssignedOrders();
+    } catch (error) {
+      console.error('Error updating order:', error);
+      message.error('Failed to update order status');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const submitStatusUpdate = async () => {
     try {
       setLoading(true);
-      await orderAPI.updateOrderStatus(selectedOrder.id, { status: newStatus });
+      await orderAPI.updateOrderStatus(selectedOrder.id, { 
+        status: newStatus,
+        notes: statusNotes 
+      });
       message.success('Order status updated successfully');
       setStatusModalVisible(false);
+      setStatusNotes('');
       fetchAssignedOrders();
     } catch (error) {
       console.error('Error updating order:', error);
@@ -75,13 +103,13 @@ const AssignedOrders = () => {
     },
     {
       title: 'Service',
-      dataIndex: 'cleaning_type_name',
-      key: 'cleaning_type_name',
+      dataIndex: 'cleaning_type',
+      key: 'cleaning_type',
     },
     {
       title: 'Service Time',
-      dataIndex: 'service_time_name',
-      key: 'service_time_name',
+      dataIndex: 'service_time',
+      key: 'service_time',
     },
     {
       title: 'Status',
@@ -118,14 +146,54 @@ const AssignedOrders = () => {
     {
       title: 'Action',
       key: 'action',
+      fixed: 'right',
+      width: 280,
       render: (_, record) => (
-        <Button
-          type="primary"
-          onClick={() => handleUpdateStatus(record)}
-          disabled={record.status === 'completed' || record.status === 'cancelled'}
-        >
-          Update Status
-        </Button>
+        <Space size="small">
+          <Tooltip title="View Details">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record)}
+              style={{ color: '#1890ff' }}
+            />
+          </Tooltip>
+          {record.status === 'pending' && (
+            <Tooltip title="Start Work">
+              <Button
+                size="small"
+                type="primary"
+                icon={<ThunderboltOutlined />}
+                onClick={() => handleQuickAction(record, 'in-progress')}
+                disabled={loading}
+              >
+                Start
+              </Button>
+            </Tooltip>
+          )}
+          {record.status === 'in-progress' && (
+            <Tooltip title="Mark Ready">
+              <Button
+                size="small"
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleQuickAction(record, 'ready')}
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                disabled={loading}
+              >
+                Ready
+              </Button>
+            </Tooltip>
+          )}
+          <Button
+            size="small"
+            type="default"
+            onClick={() => handleUpdateStatus(record)}
+            disabled={record.status === 'completed' || record.status === 'cancelled'}
+          >
+            Update
+          </Button>
+        </Space>
       )
     }
   ];
@@ -163,6 +231,7 @@ const AssignedOrders = () => {
             dataSource={orders}
             loading={loading}
             rowKey="id"
+            scroll={{ x: 1100 }}
             pagination={{ pageSize: 15 }}
           />
         </Card>
@@ -172,16 +241,21 @@ const AssignedOrders = () => {
           title="Update Order Status"
           open={statusModalVisible}
           onOk={submitStatusUpdate}
-          onCancel={() => setStatusModalVisible(false)}
+          onCancel={() => {
+            setStatusModalVisible(false);
+            setStatusNotes('');
+          }}
           confirmLoading={loading}
+          okText="Update Status"
+          width={500}
         >
           {selectedOrder && (
             <div>
-              <p className="mb-4">
+              <p style={{ marginBottom: 16 }}>
                 <strong>Order:</strong> {selectedOrder.order_number} - {selectedOrder.customer_name}
               </p>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">New Status</label>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontWeight: 500, marginBottom: 8 }}>New Status</label>
                 <Select
                   value={newStatus}
                   onChange={setNewStatus}
@@ -194,7 +268,107 @@ const AssignedOrders = () => {
                   <Select.Option value="completed">Completed</Select.Option>
                 </Select>
               </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 500, marginBottom: 8 }}>Notes (Optional)</label>
+                <TextArea
+                  value={statusNotes}
+                  onChange={(e) => setStatusNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Add any notes about this status update..."
+                />
+              </div>
             </div>
+          )}
+        </Modal>
+
+        {/* Order Details Modal */}
+        <Modal
+          title={<span style={{ fontSize: '20px', fontWeight: 'bold' }}>Order Details</span>}
+          open={detailsModalVisible}
+          onCancel={() => setDetailsModalVisible(false)}
+          footer={[
+            <Button key="close" onClick={() => setDetailsModalVisible(false)}>
+              Close
+            </Button>,
+            selectedOrder && selectedOrder.status !== 'completed' && selectedOrder.status !== 'cancelled' && (
+              <Button 
+                key="update" 
+                type="primary"
+                onClick={() => {
+                  setDetailsModalVisible(false);
+                  handleUpdateStatus(selectedOrder);
+                }}
+              >
+                Update Status
+              </Button>
+            )
+          ]}
+          width={700}
+        >
+          {selectedOrder && (
+            <Descriptions bordered column={2}>
+              <Descriptions.Item label="Order Number" span={2}>
+                <span style={{ fontWeight: 'bold', color: '#1890ff' }}>
+                  {selectedOrder.order_number}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label="Customer">
+                {selectedOrder.customer_name}
+              </Descriptions.Item>
+              <Descriptions.Item label="Phone">
+                {selectedOrder.customer_phone || 'N/A'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Cleaning Type">
+                {selectedOrder.cleaning_type}
+              </Descriptions.Item>
+              <Descriptions.Item label="Service Time">
+                {selectedOrder.service_time}
+              </Descriptions.Item>
+              <Descriptions.Item label="Items" span={2}>
+                {selectedOrder.item_description}
+              </Descriptions.Item>
+              <Descriptions.Item label="Quantity">
+                {selectedOrder.quantity}
+              </Descriptions.Item>
+              <Descriptions.Item label="Weight">
+                {selectedOrder.weight_kg} kg
+              </Descriptions.Item>
+              <Descriptions.Item label="Pickup Date">
+                {dayjs(selectedOrder.pickup_date).format('MMM DD, YYYY')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Delivery Date">
+                {dayjs(selectedOrder.delivery_date).format('MMM DD, YYYY')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Total Amount" span={2}>
+                <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
+                  LKR {parseFloat(selectedOrder.total_amount).toFixed(2)}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label="Status" span={2}>
+                <Tag color={getStatusColor(selectedOrder.status)} style={{ fontSize: '14px' }}>
+                  {selectedOrder.status?.toUpperCase()}
+                </Tag>
+              </Descriptions.Item>
+              {selectedOrder.pickup_address && (
+                <Descriptions.Item label="Pickup Address" span={2}>
+                  <div style={{ backgroundColor: '#f0f9ff', padding: '12px', borderRadius: '8px' }}>
+                    {selectedOrder.pickup_address}
+                  </div>
+                </Descriptions.Item>
+              )}
+              {selectedOrder.delivery_address && (
+                <Descriptions.Item label="Delivery Address" span={2}>
+                  <div style={{ backgroundColor: '#f0fdf4', padding: '12px', borderRadius: '8px' }}>
+                    {selectedOrder.delivery_address}
+                  </div>
+                </Descriptions.Item>
+              )}
+              {selectedOrder.special_instructions && (
+                <Descriptions.Item label="Special Instructions" span={2}>
+                  {selectedOrder.special_instructions}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
           )}
         </Modal>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Modal, Form, Select, InputNumber, Input, Button, Tag, message, Card } from 'antd';
-import { RetweetOutlined } from '@ant-design/icons';
+import { Table, Modal, Form, Select, InputNumber, Input, Button, Tag, message, Card, Space, Descriptions, Tooltip } from 'antd';
+import { RetweetOutlined, EyeOutlined, FilterOutlined } from '@ant-design/icons';
 import { rentalAPI, paymentAPI } from '../../services/apiService';
 import EmployeeLayout from '../../components/EmployeeLayout';
 
@@ -8,9 +8,12 @@ const { TextArea } = Input;
 
 const ManageReturns = () => {
   const [rentals, setRentals] = useState([]);
+  const [filteredRentals, setFilteredRentals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedRental, setSelectedRental] = useState(null);
   const [returnModalVisible, setReturnModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -20,8 +23,15 @@ const ManageReturns = () => {
   const fetchActiveRentals = async () => {
     try {
       setLoading(true);
-      const response = await rentalAPI.getAllRentals({ status: 'active' });
-      setRentals(response?.data?.data || []);
+      const response = await rentalAPI.getAllRentals();
+      const allRentals = response?.data?.data || [];
+      console.log('All rentals:', allRentals);
+      // Filter for rentals that can be returned (reserved, active, overdue - not returned/cancelled)
+      const activeRentals = allRentals.filter(r => 
+        r.rental_status === 'active' || r.rental_status === 'overdue' || r.rental_status === 'reserved'
+      );
+      setRentals(activeRentals);
+      setFilteredRentals(activeRentals);
     } catch (error) {
       console.error('Error fetching rentals:', error);
       message.error('Failed to load active rentals');
@@ -39,6 +49,22 @@ const ManageReturns = () => {
       notes: ''
     });
     setReturnModalVisible(true);
+  };
+
+  const handleViewDetails = (rental) => {
+    setSelectedRental(rental);
+    setDetailsModalVisible(true);
+  };
+
+  const handleFilterChange = (status) => {
+    setFilterStatus(status);
+    if (status === 'all') {
+      setFilteredRentals(rentals);
+    } else if (status === 'overdue') {
+      setFilteredRentals(rentals.filter(r => r.rental_status === 'overdue'));
+    } else {
+      setFilteredRentals(rentals.filter(r => r.rental_status === status));
+    }
   };
 
   const calculateRefund = (values) => {
@@ -107,7 +133,7 @@ const ManageReturns = () => {
       render: (_, record) => (
         <div>
           <div className="font-semibold">{record.suit_brand}</div>
-          <div className="text-xs text-gray-500">{record.color} | Size: {record.size}</div>
+          <div className="text-xs text-gray-500">{record.suit_color} | Size: {record.size}</div>
         </div>
       )
     },
@@ -144,13 +170,26 @@ const ManageReturns = () => {
     {
       title: 'Action',
       key: 'action',
+      fixed: 'right',
+      width: 200,
       render: (_, record) => (
-        <Button
-          type="primary"
-          onClick={() => handleProcessReturn(record)}
-        >
-          Process Return
-        </Button>
+        <Space size="small">
+          <Tooltip title="View Details">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewDetails(record)}
+              style={{ color: '#1890ff' }}
+            />
+          </Tooltip>
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => handleProcessReturn(record)}
+          >
+            Process Return
+          </Button>
+        </Space>
       )
     }
   ];
@@ -183,14 +222,132 @@ const ManageReturns = () => {
             boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
           }}
         >
+          <div style={{ marginBottom: 16 }}>
+            <Space size="small">
+              <FilterOutlined style={{ color: '#666' }} />
+              <span style={{ fontWeight: 500, color: '#666' }}>Filter:</span>
+              <Button 
+                type={filterStatus === 'all' ? 'primary' : 'default'}
+                size="small"
+                onClick={() => handleFilterChange('all')}
+              >
+                All ({rentals.length})
+              </Button>
+              <Button 
+                type={filterStatus === 'active' ? 'primary' : 'default'}
+                size="small"
+                onClick={() => handleFilterChange('active')}
+              >
+                Active ({rentals.filter(r => r.rental_status === 'active').length})
+              </Button>
+              <Button 
+                type={filterStatus === 'overdue' ? 'primary' : 'default'}
+                size="small"
+                danger={filterStatus === 'overdue'}
+                onClick={() => handleFilterChange('overdue')}
+              >
+                Overdue ({rentals.filter(r => r.rental_status === 'overdue').length})
+              </Button>
+            </Space>
+          </div>
           <Table
             columns={columns}
-            dataSource={rentals}
+            dataSource={filteredRentals}
             loading={loading}
             rowKey="id"
+            scroll={{ x: 900 }}
             pagination={{ pageSize: 10 }}
           />
         </Card>
+
+        {/* Rental Details Modal */}
+        <Modal
+          title={<span style={{ fontSize: '20px', fontWeight: 'bold' }}>Rental Details</span>}
+          open={detailsModalVisible}
+          onCancel={() => setDetailsModalVisible(false)}
+          footer={[
+            <Button key="close" onClick={() => setDetailsModalVisible(false)}>
+              Close
+            </Button>,
+            <Button 
+              key="process" 
+              type="primary"
+              onClick={() => {
+                setDetailsModalVisible(false);
+                handleProcessReturn(selectedRental);
+              }}
+            >
+              Process Return
+            </Button>
+          ]}
+          width={700}
+        >
+          {selectedRental && (
+            <Descriptions bordered column={2}>
+              <Descriptions.Item label="Rental Number" span={2}>
+                <span style={{ fontWeight: 'bold', color: '#722ed1' }}>
+                  {selectedRental.rental_number}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label="Customer">
+                {selectedRental.customer_name}
+              </Descriptions.Item>
+              <Descriptions.Item label="Phone">
+                {selectedRental.customer_phone || 'N/A'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Suit Brand">
+                {selectedRental.suit_brand}
+              </Descriptions.Item>
+              <Descriptions.Item label="Color">
+                {selectedRental.suit_color}
+              </Descriptions.Item>
+              <Descriptions.Item label="Size">
+                <Tag>{selectedRental.size}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Suit Code">
+                {selectedRental.suit_code || 'N/A'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Start Date">
+                {new Date(selectedRental.rental_start_date).toLocaleDateString()}
+              </Descriptions.Item>
+              <Descriptions.Item label="End Date">
+                <span style={{ 
+                  color: selectedRental.rental_status === 'overdue' ? '#ff4d4f' : 'inherit',
+                  fontWeight: selectedRental.rental_status === 'overdue' ? 'bold' : 'normal'
+                }}>
+                  {new Date(selectedRental.rental_end_date).toLocaleDateString()}
+                  {selectedRental.rental_status === 'overdue' && ' (OVERDUE)'}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label="Rental Days" span={2}>
+                <Tag color="blue">{selectedRental.rental_days} days</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Rental Amount">
+                LKR {parseFloat(selectedRental.rental_amount || 0).toFixed(2)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Deposit Amount">
+                <span style={{ fontWeight: 'bold', color: '#52c41a' }}>
+                  LKR {parseFloat(selectedRental.deposit_amount || 0).toFixed(2)}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label="Status" span={2}>
+                <Tag color={selectedRental.rental_status === 'overdue' ? 'red' : 'green'} style={{ fontSize: '14px' }}>
+                  {selectedRental.rental_status?.toUpperCase()}
+                </Tag>
+              </Descriptions.Item>
+              {selectedRental.delivery_address && (
+                <Descriptions.Item label="Delivery Address" span={2}>
+                  {selectedRental.delivery_address}
+                </Descriptions.Item>
+              )}
+              {selectedRental.occasion && (
+                <Descriptions.Item label="Occasion" span={2}>
+                  {selectedRental.occasion}
+                </Descriptions.Item>
+              )}
+            </Descriptions>
+          )}
+        </Modal>
 
         {/* Return Processing Modal */}
         <Modal

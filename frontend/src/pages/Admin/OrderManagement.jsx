@@ -8,28 +8,20 @@ import {
   Button,
   Modal,
   Form,
-  Input,
   message,
-  DatePicker,
   Descriptions,
-  Badge,
   Tooltip
 } from 'antd';
 import { 
   ShoppingOutlined,
   EyeOutlined,
-  UserOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  CheckCircleOutlined,
-  EditOutlined
+  UserOutlined
 } from '@ant-design/icons';
 import { orderAPI, adminAPI } from '../../services/apiService';
 import AdminLayout from '../../components/AdminLayout';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
-const { TextArea } = Input;
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -37,9 +29,7 @@ const OrderManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
-  const [isStatusModalVisible, setIsStatusModalVisible] = useState(false);
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
-  const [statusForm] = Form.useForm();
   const [assignForm] = Form.useForm();
 
   useEffect(() => {
@@ -74,12 +64,6 @@ const OrderManagement = () => {
     setIsDetailVisible(true);
   };
 
-  const handleUpdateStatus = (record) => {
-    setSelectedOrder(record);
-    statusForm.setFieldsValue({ status: record.status });
-    setIsStatusModalVisible(true);
-  };
-
   const handleAssignOrder = (record) => {
     setSelectedOrder(record);
     assignForm.setFieldsValue({ 
@@ -88,23 +72,11 @@ const OrderManagement = () => {
     setIsAssignModalVisible(true);
   };
 
-  const submitStatusUpdate = async (values) => {
-    try {
-      await orderAPI.updateOrderStatus(selectedOrder.id, values);
-      message.success('Order status updated successfully');
-      setIsStatusModalVisible(false);
-      statusForm.resetFields();
-      fetchOrders();
-    } catch (error) {
-      message.error('Failed to update status');
-    }
-  };
-
   const submitAssignment = async (values) => {
     try {
       await orderAPI.assignOrder(selectedOrder.id, values);
       message.success('Order assigned successfully');
-      setIsAssignModalVisible(true);
+      setIsAssignModalVisible(false);
       assignForm.resetFields();
       fetchOrders();
     } catch (error) {
@@ -212,7 +184,7 @@ const OrderManagement = () => {
       onFilter: (value, record) => record.status === value,
       render: (status) => (
         <Tag color={getStatusColor(status)} style={{ fontWeight: 500, fontSize: '12px' }}>
-          {status.replace('-', ' ').toUpperCase()}
+          {status?.replace('-', ' ').toUpperCase()}
         </Tag>
       )
     },
@@ -237,7 +209,7 @@ const OrderManagement = () => {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 140,
+      width: 100,
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="View Details">
@@ -246,14 +218,6 @@ const OrderManagement = () => {
               icon={<EyeOutlined />}
               onClick={() => handleViewDetails(record)}
               style={{ color: '#667eea' }}
-            />
-          </Tooltip>
-          <Tooltip title="Update Status">
-            <Button 
-              type="text"
-              icon={<EditOutlined />}
-              onClick={() => handleUpdateStatus(record)}
-              style={{ color: '#1890ff' }}
             />
           </Tooltip>
           <Tooltip title="Assign Employee">
@@ -286,8 +250,13 @@ const OrderManagement = () => {
               Order Management
             </h1>
             <p style={{ margin: '8px 0 0 0', color: '#666', fontSize: '15px' }}>
-              View and manage all laundry orders
+              View all laundry orders and assign to employees
             </p>
+            <div style={{ marginTop: 12, padding: '12px 16px', backgroundColor: '#e6f7ff', borderRadius: '8px', border: '1px solid #91d5ff' }}>
+              <span style={{ fontSize: '13px', color: '#0050b3' }}>
+                ℹ️ <strong>Admin View:</strong> You can view order details and assign employees. Status updates are handled by employees.
+              </span>
+            </div>
           </div>
 
           <Table
@@ -306,13 +275,8 @@ const OrderManagement = () => {
           />
         </Card>
 
-        {/* Order Details Modal */}
         <Modal
-          title={
-            <span style={{ fontSize: '20px', fontWeight: 'bold' }}>
-              Order Details
-            </span>
-          }
+          title={<span style={{ fontSize: '20px', fontWeight: 'bold' }}>Order Details</span>}
           open={isDetailVisible}
           onCancel={() => setIsDetailVisible(false)}
           footer={[
@@ -357,10 +321,10 @@ const OrderManagement = () => {
                 {dayjs(selectedOrder.delivery_date).format('MMM DD, YYYY')}
               </Descriptions.Item>
               <Descriptions.Item label="Subtotal">
-                LKR {parseFloat(selectedOrder.subtotal).toFixed(2)}
+                LKR {parseFloat(selectedOrder.subtotal || 0).toFixed(2)}
               </Descriptions.Item>
               <Descriptions.Item label="Tax">
-                LKR {parseFloat(selectedOrder.tax).toFixed(2)}
+                LKR {parseFloat(selectedOrder.tax || 0).toFixed(2)}
               </Descriptions.Item>
               <Descriptions.Item label="Total Amount" span={2}>
                 <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
@@ -403,59 +367,6 @@ const OrderManagement = () => {
           )}
         </Modal>
 
-        {/* Update Status Modal */}
-        <Modal
-          title="Update Order Status"
-          open={isStatusModalVisible}
-          onCancel={() => {
-            setIsStatusModalVisible(false);
-            statusForm.resetFields();
-          }}
-          footer={null}
-        >
-          <Form
-            form={statusForm}
-            layout="vertical"
-            onFinish={submitStatusUpdate}
-          >
-            <Form.Item
-              label="New Status"
-              name="status"
-              rules={[{ required: true, message: 'Please select status' }]}
-            >
-              <Select size="large" placeholder="Select new status">
-                <Option value="pending">Pending</Option>
-                <Option value="in-progress">In Progress</Option>
-                <Option value="ready">Ready</Option>
-                <Option value="completed">Completed</Option>
-                <Option value="cancelled">Cancelled</Option>
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              label="Notes (Optional)"
-              name="notes"
-            >
-              <TextArea rows={3} placeholder="Add any notes about the status change" />
-            </Form.Item>
-
-            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-              <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-                <Button onClick={() => {
-                  setIsStatusModalVisible(false);
-                  statusForm.resetFields();
-                }}>
-                  Cancel
-                </Button>
-                <Button type="primary" htmlType="submit" size="large">
-                  Update Status
-                </Button>
-              </Space>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Assign Order Modal */}
         <Modal
           title="Assign Order to Employee"
           open={isAssignModalVisible}
