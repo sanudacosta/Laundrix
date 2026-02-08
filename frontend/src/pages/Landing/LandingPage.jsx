@@ -49,12 +49,12 @@ const LandingPage = () => {
     {
       icon: Clock,
       title: 'Real-Time Tracking',
-      description: 'Monitor your orders from pickup to delivery with live status updates'
+      description: 'Track your orders from pickup to delivery with live updates'
     },
     {
       icon: Truck,
       title: 'Free Pickup & Delivery',
-      description: 'Convenient doorstep service - we handle pickup and delivery'
+      description: 'Schedule convenient pickup and delivery at your doorstep'
     },
     {
       icon: Shield,
@@ -63,26 +63,19 @@ const LandingPage = () => {
     },
     {
       icon: CreditCard,
-      title: 'Easy Online Booking',
-      description: 'Simple one-page forms - book laundry or rent suits in minutes'
+      title: 'Secure Payments',
+      description: 'Multiple payment options with bank-level security'
     },
     {
       icon: MessageCircle,
-      title: 'Email Notifications',
-      description: 'Stay updated with automated email alerts at every step'
+      title: '24/7 Support',
+      description: 'Email support and live chat always available to help you'
     },
     {
       icon: TrendingUp,
-      title: 'Business Insights',
-      description: 'Detailed analytics and reports for business owners'
+      title: 'Business Analytics',
+      description: 'Detailed reports and insights for business owners'
     }
-  ];
-
-  const stats = [
-    { value: '10K+', label: 'Happy Customers' },
-    { value: '50K+', label: 'Orders Completed' },
-    { value: '98%', label: 'Satisfaction Rate' },
-    { value: '24/7', label: 'Support Available' }
   ];
 
   const testimonials = [
@@ -130,12 +123,11 @@ const LandingPage = () => {
                 #1 Laundry & Suit Rental Platform
               </div>
               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-                Premium Laundry<br />
-                <span className="text-blue-600">Made Simple</span>
+                Professional Laundry<br />
+                <span className="text-blue-600">& Suit Rental Platform</span>
               </h1>
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Professional laundry service and designer suit rentals in just a few clicks. 
-                Easy booking, doorstep delivery, and guaranteed quality.
+                Order laundry services, rent premium suits, and track everything in real-time with instant email notifications and doorstep delivery.
               </p>
 
               {/* Quick Action Buttons */}
@@ -145,7 +137,7 @@ const LandingPage = () => {
                   className="group bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
                 >
                   <Droplet className="w-5 h-5 mr-2" />
-                  Quick Laundry Order
+                  Order Laundry Now
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
@@ -153,7 +145,7 @@ const LandingPage = () => {
                   className="group bg-gradient-to-r from-gray-800 to-gray-900 text-white px-6 py-4 rounded-xl font-semibold hover:from-gray-900 hover:to-black transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
                 >
                   <Shirt className="w-5 h-5 mr-2" />
-                  Browse Suits
+                  Rent a Suit
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -173,12 +165,22 @@ const LandingPage = () => {
               </div>
               {/* Stats */}
               <div className="grid grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                    <div className="text-sm text-gray-600">{stat.label}</div>
-                  </div>
-                ))}
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">500+</div>
+                  <div className="text-sm text-gray-600">Happy Customers</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">2.5K+</div>
+                  <div className="text-sm text-gray-600">Orders Completed</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">150+</div>
+                  <div className="text-sm text-gray-600">Premium Suits</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-900">24/7</div>
+                  <div className="text-sm text-gray-600">Support Available</div>
+                </div>
               </div>
             </div>
 
@@ -496,7 +498,7 @@ const LandingPage = () => {
                   'Unlimited wash & fold',
                   'Express turnaround (24h)',
                   'Priority pickup & delivery',
-                  'SMS + Email notifications',
+                  'Email notifications',
                   'Dry cleaning discounts',
                   'Priority support',
                   'Suit rental 20% off'

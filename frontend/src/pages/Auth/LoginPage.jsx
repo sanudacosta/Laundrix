@@ -231,9 +231,9 @@ const LoginPage = () => {
               <div className="flex-1">
                 <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials</p>
                 <div className="text-xs text-blue-800 space-y-1">
-                  <p><span className="font-medium">Admin:</span> admin@laundrix.com</p>
-                  <p><span className="font-medium">Employee:</span> john.emp@laundrix.com</p>
-                  <p><span className="font-medium">Customer:</span> mike@example.com</p>
+                  <p><span className="font-medium">Admin:</span> admin@laundrix.lk</p>
+                  <p><span className="font-medium">Employee:</span> kamal@laundrix.lk</p>
+                  <p><span className="font-medium">Customer:</span> roshan@example.com</p>
                   <p><span className="font-medium">Password:</span> Password123!</p>
                 </div>
               </div>
@@ -270,7 +270,7 @@ const LoginPage = () => {
             </div>
             <div className="flex items-center space-x-3">
               <CheckCircle className="w-6 h-6 text-blue-300" />
-              <span>Customer notifications & SMS alerts</span>
+              <span>Email confirmations & SMS alerts</span>
             </div>
           </div>
         </div>
