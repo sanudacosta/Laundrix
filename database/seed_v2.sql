@@ -218,9 +218,23 @@ INSERT INTO suit_rentals (rental_number, customer_id, inventory_id, assigned_emp
 ('SR-2026-0001', 4, 10, 2, '2026-01-28', '2026-01-30', 2, 6000.00, 3000.00, 9000.00, 'paid', 'reserved', 'Wedding ceremony', '321 Ward Place, Colombo 07', 'Size 42R Armani Tuxedo'),
 ('SR-2026-0002', 5, 3, 2, '2026-01-18', '2026-01-19', 1, 2800.00, 3000.00, 5800.00, 'fully-refunded', 'returned', 'Business conference', '654 Havelock Road, Colombo 05', 'Size 40R Hugo Boss Navy returned in excellent condition');
 
+-- Seed Payments (matching orders and rentals)
+INSERT INTO payments (payment_number, customer_id, order_id, rental_id, amount, payment_method, payment_status, transaction_reference, payment_date, notes) VALUES
+('PAY-2026-0001', 4, 1, NULL, 972.00, 'card', 'completed', 'TXN-LO-2026-0001-001', '2026-01-20 10:30:00', 'Online payment for order LO-2026-0001'),
+('PAY-2026-0002', 5, 2, NULL, 2430.00, 'cash', 'completed', 'CASH-LO-2026-0002-001', '2026-01-21 14:15:00', 'Walk-in payment for order LO-2026-0002'),
+('PAY-2026-0003', 6, 3, NULL, 1382.40, 'card', 'pending', 'TXN-LO-2026-0003-001', NULL, 'Pending payment for order LO-2026-0003'),
+('PAY-2026-0004', 4, NULL, 1, 9000.00, 'bank-transfer', 'completed', 'BANK-SR-2026-0001-001', '2026-01-27 09:00:00', 'Full payment + deposit for rental SR-2026-0001'),
+('PAY-2026-0005', 5, NULL, 2, 5800.00, 'cash', 'refunded', 'CASH-SR-2026-0002-001', '2026-01-18 11:30:00', 'Full payment refunded after return SR-2026-0002');
+
 -- Insert default system settings
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('business_name', 'Laundrix', 'Business name'),
 ('tax_rate', '8', 'Tax rate percentage'),
 ('currency', 'LKR', 'Currency code'),
-('late_fee_per_day', '500', 'Late fee per day for overdue rentals');
+('late_fee_per_day', '500', 'Late fee per day for overdue rentals'),
+('business_email', 'info@laundrix.lk', 'Business contact email'),
+('business_phone', '+94112345678', 'Business contact phone'),
+('min_rental_days', '1', 'Minimum rental period in days'),
+('max_rental_days', '14', 'Maximum rental period in days'),
+('enable_sms_notifications', 'false', 'Enable SMS notifications'),
+('enable_email_notifications', 'true', 'Enable email notifications');

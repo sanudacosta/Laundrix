@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Avatar, Badge } from 'antd';
 import { 
   DashboardOutlined, 
   UserOutlined, 
@@ -10,7 +10,9 @@ import {
   ShoppingCartOutlined,
   AppstoreOutlined,
   MenuFoldOutlined,
-  MenuUnfoldOutlined
+  MenuUnfoldOutlined,
+  LogoutOutlined,
+  CrownOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -84,18 +86,52 @@ const AdminLayout = ({ children }) => {
           boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
         }}
       >
+        {/* Logo Section */}
         <div style={{ 
-          color: 'white', 
-          padding: collapsed ? '16px 8px' : '20px 24px', 
-          fontSize: collapsed ? '16px' : '22px', 
-          fontWeight: '700',
-          textAlign: 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          background: 'rgba(0,0,0,0.2)',
-          letterSpacing: '0.5px'
+          padding: collapsed ? '20px 16px' : '24px', 
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px'
         }}>
-          {collapsed ? 'LX' : 'Laundrix'}
+          <div style={{
+            width: collapsed ? '40px' : '48px',
+            height: collapsed ? '40px' : '48px',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+          }}>
+            <CrownOutlined style={{ fontSize: collapsed ? '20px' : '24px', color: 'white' }} />
+          </div>
+          {!collapsed && (
+            <div>
+              <div style={{ 
+                color: 'white', 
+                fontSize: '18px', 
+                fontWeight: '700',
+                letterSpacing: '0.5px',
+                lineHeight: '1.2'
+              }}>
+                Laundrix
+              </div>
+              <div style={{ 
+                color: 'rgba(255,255,255,0.6)', 
+                fontSize: '11px',
+                fontWeight: '500',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}>
+                Admin Panel
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Menu */}
         <Menu 
           theme="dark" 
           mode="inline" 
@@ -104,9 +140,73 @@ const AdminLayout = ({ children }) => {
           style={{ 
             background: 'transparent',
             border: 'none',
-            marginTop: '16px'
+            padding: '16px 8px'
           }}
+          className="modern-menu"
         />
+
+        {/* User Section */}
+        {!collapsed && (
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '20px',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Avatar 
+                style={{ 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  flexShrink: 0
+                }} 
+                size={40}
+              >
+                {user?.full_name?.charAt(0) || 'A'}
+              </Avatar>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ 
+                  color: 'white', 
+                  fontSize: '13px', 
+                  fontWeight: '600',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {user?.full_name || 'Admin'}
+                </div>
+                <div style={{ 
+                  color: 'rgba(255,255,255,0.6)', 
+                  fontSize: '11px'
+                }}>
+                  Administrator
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <style>{`
+          .modern-menu .ant-menu-item {
+            margin: 4px 0 !important;
+            border-radius: 8px !important;
+            height: 44px !important;
+            line-height: 44px !important;
+            transition: all 0.3s !important;
+          }
+          .modern-menu .ant-menu-item:hover {
+            background: rgba(255,255,255,0.08) !important;
+          }
+          .modern-menu .ant-menu-item-selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+          }
+          .modern-menu .ant-menu-item-selected::after {
+            display: none !important;
+          }
+        `}</style>
       </Sider>
       <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
         <Header style={{ 
