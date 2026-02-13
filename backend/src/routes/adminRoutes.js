@@ -19,11 +19,13 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require admin authorization
+// Allow employees to get customer list for POS system
+router.get('/users', authenticate, authorize('admin', 'employee'), getAllUsers);
+
+// All other routes require admin authorization
 router.use(authenticate, authorize('admin'));
 
-// User management
-router.get('/users', getAllUsers);
+// User management (admin only)
 router.get('/users/:id', getUserById);
 router.post('/users', createUser);
 router.put('/users/:id', updateUser);

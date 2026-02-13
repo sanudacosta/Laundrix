@@ -402,21 +402,50 @@ export const checkout = async (req, res, next) => {
 // Create single rental (direct booking without cart)
 export const createRental = async (req, res, next) => {
   try {
-    const customerId = req.user.userId;
+    // Allow employees to create rentals for customers (POS)
+    // If employee is creating rental, customer_id must be provided in body
+    // If customer is creating own rental, use their userId from token
+    const userRole = req.user.role;
     const {
+      customer_id,
       product_id,
       size,
-      start_date,
+      rental_start_date,
+      rental_end_date,
+      start_date, // Support both naming conventions
       end_date,
       occasion,
       delivery_address,
       special_instructions
     } = req.body;
+
+    // Determine the actual customer ID and if this is a POS rental
+    let customerId;
+    let isPOSOrder = false;
+    let assignedEmployeeId = null;
+    let rentalStatus = 'reserved';
+    let paymentStatus = 'pending';
+    
+    if (userRole === 'employee' && customer_id) {
+      // Employee creating rental for a customer via POS
+      customerId = customer_id;
+      isPOSOrder = true;
+      assignedEmployeeId = req.user.userId; // Auto-assign to employee creating the rental
+      rentalStatus = 'active'; // POS rentals start as active (payment collected, suit ready)
+      paymentStatus = 'paid'; // Payment collected at POS (use 'paid' not 'completed')
+    } else {
+      // Customer creating their own rental
+      customerId = req.user.userId;
+    }
+
+    // Support both date field names
+    const startDate = rental_start_date || start_date;
+    const endDate = rental_end_date || end_date;
     
     // Validate dates
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
-    const rentalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(endDate);
+    const rentalDays = Math.ceil((endDateTime - startDateTime) / (1000 * 60 * 60 * 24));
     
     if (rentalDays <= 0) {
       throw new AppError('Invalid date range', 400);
@@ -450,7 +479,7 @@ export const createRental = async (req, res, next) => {
          )
        )
        LIMIT 1`,
-      [product_id, size, start_date, start_date, end_date, end_date, start_date, end_date]
+      [product_id, size, startDate, startDate, endDate, endDate, startDate, endDate]
     );
     
     if (available.length === 0) {
@@ -467,24 +496,24 @@ export const createRental = async (req, res, next) => {
     // Generate rental number
     const rentalNumber = `SR-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
     
-    // Create rental
+    // Create rental with appropriate status for POS or online
     const [result] = await db.query(
       `INSERT INTO suit_rentals 
-       (rental_number, customer_id, inventory_id, rental_start_date, rental_end_date,
+       (rental_number, customer_id, inventory_id, assigned_employee_id, rental_start_date, rental_end_date,
         rental_days, rental_amount, deposit_amount, total_amount, payment_status,
         rental_status, occasion, delivery_address, special_instructions)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'reserved', ?, ?, ?)`,
-      [rentalNumber, customerId, inventoryId, start_date, end_date, rentalDays,
-       rentalAmount, depositAmount, totalAmount, occasion, delivery_address, special_instructions]
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [rentalNumber, customerId, inventoryId, assignedEmployeeId, startDate, endDate, rentalDays,
+       rentalAmount, depositAmount, totalAmount, paymentStatus, rentalStatus, occasion, delivery_address, special_instructions]
     );
     
     res.status(201).json({
       success: true,
       message: 'Rental created successfully',
       data: {
-        id: result.insertId,
-        rental_number: rentalNumber,
-        total_amount: totalAmount
+        rentalId: result.insertId,
+        rentalNumber: rentalNumber,
+        totalAmount: totalAmount
       }
     });
   } catch (error) {

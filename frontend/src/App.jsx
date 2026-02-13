@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -33,6 +34,7 @@ import SettingsPage from './pages/Admin/SettingsPage';
 
 // Employee pages
 import EmployeeDashboard from './pages/Employee/EmployeeDashboard';
+import EmployeePOS from './pages/Employee/EmployeePOS';
 import AssignedOrders from './pages/Employee/AssignedOrders';
 import ManageReturns from './pages/Employee/ManageReturns';
 
@@ -202,6 +204,14 @@ const AppRoutes = () => {
         }
       />
       <Route
+        path="/employee/pos"
+        element={
+          <ProtectedRoute roles={['employee']}>
+            <EmployeePOS />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/employee/assigned-orders"
         element={
           <ProtectedRoute roles={['employee']}>
@@ -226,28 +236,38 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}
-      >
-        <ToastContainer
-          position="top-right"
-          autoClose={4000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <ConfigProvider
+      theme={{
+        token: {
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+          fontSize: 14,
+          borderRadius: 6,
+        },
+      }}
+    >
+      <AuthProvider>
+        <Router
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
+          <ToastContainer
+            position="top-right"
+            autoClose={4000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
+    </ConfigProvider>
   );
 }
 

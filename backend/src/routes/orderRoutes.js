@@ -22,7 +22,7 @@ router.get('/service-times', authenticate, getServiceTimes);
 
 // Customer routes
 router.get('/my-orders', authenticate, authorize('customer'), getMyOrders);
-router.post('/', authenticate, authorize('customer'), validateLaundryOrder, validate, createOrder);
+router.post('/', authenticate, authorize('customer', 'employee'), validateLaundryOrder, validate, createOrder);
 
 // Employee routes
 router.get('/assigned', authenticate, authorize('employee', 'admin'), getAssignedOrders);

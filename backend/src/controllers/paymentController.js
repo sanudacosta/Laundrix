@@ -6,14 +6,22 @@ import { processPayment, processRefund } from '../services/paymentService.js';
 export const createPayment = async (req, res, next) => {
   try {
     const userId = req.user.userId;
+    const userRole = req.user.role;
     const {
+      customer_id, // For POS payments, employee provides customer_id
       order_id,
       rental_id,
       payment_type,
       payment_method,
       amount,
+      payment_status, // Accept payment_status from request
+      transaction_reference, // Accept transaction_reference from request
+      notes,
       card_details
     } = req.body;
+    
+    // Determine actual customer ID (for POS, employee provides customer_id)
+    const actualCustomerId = (userRole === 'employee' && customer_id) ? customer_id : userId;
     
     // Validate payment type and reference
     if (payment_type === 'laundry' && !order_id) {
@@ -24,13 +32,25 @@ export const createPayment = async (req, res, next) => {
       throw new AppError('Rental ID required for rental payment', 400);
     }
     
-    // Process payment
-    const paymentResult = await processPayment({
-      amount,
-      paymentMethod: payment_method,
-      cardDetails: card_details,
-      customerInfo: { userId }
-    });
+    // Process payment (skip external processing for POS completed payments)
+    let paymentResult;
+    const isCompletedPOSPayment = (userRole === 'employee' && payment_status === 'completed');
+    
+    if (isCompletedPOSPayment) {
+      // POS payment already collected - skip external processing
+      paymentResult = {
+        success: true,
+        transactionId: transaction_reference || `POS-${Date.now()}`
+      };
+    } else {
+      // Process payment through payment gateway
+      paymentResult = await processPayment({
+        amount,
+        paymentMethod: payment_method,
+        cardDetails: card_details,
+        customerInfo: { userId: actualCustomerId }
+      });
+    }
     
     if (!paymentResult.success) {
       throw new AppError(paymentResult.error || 'Payment processing failed', 400);
@@ -39,30 +59,35 @@ export const createPayment = async (req, res, next) => {
     // Generate payment number
     const paymentNumber = `PAY-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
     
+    // Determine final payment status
+    const finalPaymentStatus = payment_status || 'completed';
+    
     // Save payment to database
     const [result] = await db.query(
       `INSERT INTO payments 
        (payment_number, customer_id, order_id, rental_id, payment_method, 
-        amount, transaction_reference, payment_status, payment_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [paymentNumber, userId, order_id, rental_id, payment_method,
-       amount, paymentResult.transactionId, 'completed']
+        amount, transaction_reference, payment_status, payment_date, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+      [paymentNumber, actualCustomerId, order_id, rental_id, payment_method,
+       amount, paymentResult.transactionId, finalPaymentStatus, notes]
     );
     
     const paymentId = result.insertId;
     
-    // Update order/rental payment status
+    // Update order/rental payment status to 'paid'
+    const updatedStatus = 'paid';
+    
     if (order_id) {
       await db.query(
         'UPDATE laundry_orders SET payment_status = ? WHERE id = ?',
-        ['paid', order_id]
+        [updatedStatus, order_id]
       );
     }
     
     if (rental_id) {
       await db.query(
         'UPDATE suit_rentals SET payment_status = ? WHERE id = ?',
-        ['paid', rental_id]
+        [updatedStatus, rental_id]
       );
     }
     

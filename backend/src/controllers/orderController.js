@@ -138,8 +138,12 @@ export const getOrderById = async (req, res, next) => {
 // Create new laundry order
 export const createOrder = async (req, res, next) => {
   try {
-    const customerId = req.user.userId;
+    // Allow employees to create orders for customers (POS)
+    // If employee is creating order, customer_id must be provided in body
+    // If customer is creating own order, use their userId from token
+    const userRole = req.user.role;
     const {
+      customer_id,
       cleaning_type_id,
       service_time_id,
       item_description,
@@ -151,6 +155,39 @@ export const createOrder = async (req, res, next) => {
       order_type,
       pickup_date
     } = req.body;
+
+    // Determine the actual customer ID and if this is a POS order
+    let customerId;
+    let isPOSOrder = false;
+    let assignedEmployeeId = null;
+    let initialStatus = 'pending';
+    let paymentStatus = 'pending';
+    
+    if (userRole === 'employee' && customer_id) {
+      // Employee creating order for a customer via POS
+      customerId = customer_id;
+      isPOSOrder = true;
+      assignedEmployeeId = req.user.userId; // Auto-assign to employee creating the order
+      initialStatus = 'in-progress'; // POS orders start as in-progress (payment collected, ready to process)
+      paymentStatus = 'paid'; // POS orders have payment collected upfront
+      
+      console.log('POS ORDER DETECTED:', {
+        userRole,
+        customer_id,
+        assignedEmployeeId,
+        initialStatus,
+        paymentStatus
+      });
+    } else {
+      // Customer creating their own order
+      customerId = req.user.userId;
+      console.log('REGULAR ORDER:', {
+        userRole,
+        customerId,
+        initialStatus,
+        paymentStatus
+      });
+    }
     
     // Get pricing info
     const [cleaningTypes] = await db.query('SELECT base_price FROM cleaning_types WHERE id = ?', [cleaning_type_id]);
@@ -176,24 +213,38 @@ export const createOrder = async (req, res, next) => {
     // Generate order number
     const orderNumber = `LO-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
     
-    // Insert order
+    console.log('BEFORE INSERT - Status Values:', {
+      initialStatus,
+      paymentStatus,
+      isPOSOrder,
+      assignedEmployeeId
+    });
+    
+    // Insert order with assigned employee if POS order
     const [result] = await db.query(
       `INSERT INTO laundry_orders 
-       (order_number, customer_id, cleaning_type_id, service_time_id, item_description, 
+       (order_number, customer_id, cleaning_type_id, service_time_id, assigned_employee_id, item_description, 
         quantity, weight_kg, special_instructions, pickup_address, delivery_address, order_type, 
-        subtotal, tax, total_amount, pickup_date, delivery_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [orderNumber, customerId, cleaning_type_id, service_time_id, item_description,
+        status, payment_status, subtotal, tax, total_amount, pickup_date, delivery_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [orderNumber, customerId, cleaning_type_id, service_time_id, assignedEmployeeId, item_description,
        quantity, weight_kg, special_instructions, pickup_address, delivery_address, order_type, 
-       subtotal, tax, totalAmount, pickupDateTime, deliveryDate]
+       initialStatus, paymentStatus, subtotal, tax, totalAmount, pickupDateTime, deliveryDate]
     );
+    
+    console.log('AFTER INSERT - Order ID:', result.insertId);
     
     const orderId = result.insertId;
     
-    // Add to history
+    // Add to history (use the employee's ID if they created it, otherwise the customer)
+    const changedBy = isPOSOrder ? req.user.userId : customerId;
+    const historyNote = isPOSOrder 
+      ? 'POS order created - payment collected, ready to process' 
+      : 'Order placed';
+    
     await db.query(
       'INSERT INTO order_status_history (order_id, old_status, new_status, changed_by, notes) VALUES (?, ?, ?, ?, ?)',
-      [orderId, null, 'pending', customerId, 'Order placed']
+      [orderId, null, initialStatus, changedBy, historyNote]
     );
     
     // Send notification

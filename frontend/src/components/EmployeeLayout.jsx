@@ -7,7 +7,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
-  ThunderboltOutlined
+  ThunderboltOutlined,
+  ShopOutlined
 } from '@ant-design/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +25,11 @@ const EmployeeLayout = ({ children }) => {
       key: '/employee/dashboard',
       icon: <DashboardOutlined />,
       label: <Link to="/employee/dashboard">Dashboard</Link>,
+    },
+    {
+      key: '/employee/pos',
+      icon: <ShopOutlined />,
+      label: <Link to="/employee/pos">Point of Sale</Link>,
     },
     {
       key: '/employee/assigned-orders',

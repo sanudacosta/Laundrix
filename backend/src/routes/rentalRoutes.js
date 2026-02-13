@@ -33,8 +33,8 @@ router.delete('/cart/:id', authenticate, authorize('customer'), removeFromCart);
 router.delete('/cart', authenticate, authorize('customer'), clearCart);
 router.post('/cart/checkout', authenticate, authorize('customer'), checkout);
 
-// Rental routes (customer only)
-router.post('/rentals', authenticate, authorize('customer'), createRental);
+// Rental routes (customer and employee for POS)
+router.post('/rentals', authenticate, authorize('customer', 'employee'), createRental);
 router.get('/my-rentals', authenticate, authorize('customer'), getMyRentals);
 
 // Admin routes
