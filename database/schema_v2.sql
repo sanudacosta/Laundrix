@@ -58,6 +58,8 @@ CREATE TABLE laundry_orders (
     quantity INT NOT NULL DEFAULT 1,
     weight_kg DECIMAL(5, 2),
     special_instructions TEXT,
+    pickup_address TEXT,
+    delivery_address TEXT,
     order_type ENUM('walk-in', 'online') NOT NULL DEFAULT 'online',
     status ENUM('pending', 'in-progress', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
     subtotal DECIMAL(10, 2) NOT NULL,
@@ -126,11 +128,11 @@ CREATE TABLE suit_inventory (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES suit_products(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_product_size (product_id, size),
     INDEX idx_product (product_id),
     INDEX idx_size (size),
     INDEX idx_available (is_available),
-    INDEX idx_suit_code (suit_code)
+    INDEX idx_suit_code (suit_code),
+    INDEX idx_product_size (product_id, size)
 );
 
 -- Suit Rentals Table

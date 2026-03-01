@@ -71,22 +71,29 @@ INSERT INTO suit_products (product_code, category_id, name, brand, description, 
 ('TF-WH', 2, 'Tom Ford White Jacket', 'Tom Ford', 'Stunning white dinner jacket for summer weddings and beach ceremonies. Ultimate luxury.', 'White', 3000.00, 3000.00, 125000.00, 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500', TRUE),
 ('JC-GY', 4, 'J.Crew Ludlow Suit', 'J.Crew', 'Affordable and stylish suit perfect for graduation ceremonies. Modern fit for younger generation.', 'Gray', 1600.00, 3000.00, 48000.00, 'https://images.unsplash.com/photo-1593030103066-0093718efeb9?w=500', TRUE);
 
--- Seed Suit Inventory (Each product in 6 sizes: 36R, 38R, 40R, 42R, 44R, 46R)
--- Product 1: Hugo Boss Navy Suit
+-- Seed Suit Inventory (Multiple suits per size for popular products)
+-- Product 1: Hugo Boss Navy Suit (2 of each size - popular item)
 INSERT INTO suit_inventory (product_id, size, suit_code, condition_status, is_available) VALUES
 (1, '36R', 'HB-NV-36R-001', 'excellent', TRUE),
+(1, '36R', 'HB-NV-36R-002', 'excellent', TRUE),
 (1, '38R', 'HB-NV-38R-001', 'excellent', TRUE),
+(1, '38R', 'HB-NV-38R-002', 'excellent', TRUE),
 (1, '40R', 'HB-NV-40R-001', 'excellent', TRUE),
+(1, '40R', 'HB-NV-40R-002', 'good', TRUE),
 (1, '42R', 'HB-NV-42R-001', 'excellent', TRUE),
+(1, '42R', 'HB-NV-42R-002', 'excellent', TRUE),
 (1, '44R', 'HB-NV-44R-001', 'excellent', TRUE),
 (1, '46R', 'HB-NV-46R-001', 'excellent', TRUE);
 
--- Product 2: Armani Tuxedo
+-- Product 2: Armani Tuxedo (2 of each size - high demand)
 INSERT INTO suit_inventory (product_id, size, suit_code, condition_status, is_available) VALUES
 (2, '36R', 'AR-TX-36R-001', 'excellent', TRUE),
 (2, '38R', 'AR-TX-38R-001', 'excellent', TRUE),
+(2, '38R', 'AR-TX-38R-002', 'excellent', TRUE),
 (2, '40R', 'AR-TX-40R-001', 'excellent', TRUE),
+(2, '40R', 'AR-TX-40R-002', 'good', TRUE),
 (2, '42R', 'AR-TX-42R-001', 'excellent', TRUE),
+(2, '42R', 'AR-TX-42R-002', 'excellent', TRUE),
 (2, '44R', 'AR-TX-44R-001', 'excellent', TRUE),
 (2, '46R', 'AR-TX-46R-001', 'excellent', TRUE);
 
@@ -208,10 +215,10 @@ INSERT INTO suit_inventory (product_id, size, suit_code, condition_status, is_av
 (15, '46R', 'JC-GY-46R-001', 'good', TRUE);
 
 -- Seed Sample Orders (with Colombo addresses)
-INSERT INTO laundry_orders (order_number, customer_id, cleaning_type_id, service_time_id, assigned_employee_id, item_description, quantity, weight_kg, special_instructions, order_type, status, subtotal, tax, total_amount, payment_status, pickup_date, delivery_date) VALUES
-('LO-2026-0001', 4, 2, 3, 2, '3 Shirts, 2 Pants, 1 Jacket', 6, 3.5, 'Please use hypoallergenic detergent', 'online', 'in-progress', 900.00, 72.00, 972.00, 'paid', '2026-01-20', '2026-01-22'),
-('LO-2026-0002', 5, 3, 2, 2, '10 Casual Shirts, 5 Pants', 15, 5.0, 'No starch please', 'walk-in', 'ready', 2250.00, 180.00, 2430.00, 'paid', '2026-01-21', '2026-01-22'),
-('LO-2026-0003', 6, 1, 4, NULL, '2 Suits for dry cleaning', 2, 2.0, 'Handle with care', 'online', 'pending', 1280.00, 102.40, 1382.40, 'pending', '2026-01-23', '2026-01-27');
+INSERT INTO laundry_orders (order_number, customer_id, cleaning_type_id, service_time_id, assigned_employee_id, item_description, quantity, weight_kg, special_instructions, pickup_address, delivery_address, order_type, status, subtotal, tax, total_amount, payment_status, pickup_date, delivery_date) VALUES
+('LO-2026-0001', 4, 2, 3, 2, '3 Shirts, 2 Pants, 1 Jacket', 6, 3.5, 'Please use hypoallergenic detergent', '321 Ward Place, Colombo 07', '321 Ward Place, Colombo 07', 'online', 'in-progress', 900.00, 72.00, 972.00, 'paid', '2026-01-20', '2026-01-22'),
+('LO-2026-0002', 5, 3, 2, 2, '10 Casual Shirts, 5 Pants', 15, 5.0, 'No starch please', '654 Havelock Road, Colombo 05', '654 Havelock Road, Colombo 05', 'walk-in', 'ready', 2250.00, 180.00, 2430.00, 'paid', '2026-01-21', '2026-01-22'),
+('LO-2026-0003', 6, 1, 4, NULL, '2 Suits for dry cleaning', 2, 2.0, 'Handle with care', '987 Bauddhaloka Mawatha, Colombo 04', '987 Bauddhaloka Mawatha, Colombo 04', 'online', 'pending', 1280.00, 102.40, 1382.40, 'pending', '2026-01-23', '2026-01-27');
 
 -- Seed Sample Rentals (using inventory IDs)
 INSERT INTO suit_rentals (rental_number, customer_id, inventory_id, assigned_employee_id, rental_start_date, rental_end_date, rental_days, rental_amount, deposit_amount, total_amount, payment_status, rental_status, occasion, delivery_address, notes) VALUES
