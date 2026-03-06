@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
@@ -239,10 +239,11 @@ const BrowseSuits = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Navbar />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-7 h-7 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-gray-500">Loading suits...</p>
         </div>
       </div>
     );
@@ -252,139 +253,89 @@ const BrowseSuits = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Browse Suits</h1>
-          <p className="text-gray-600">Find the perfect suit for your occasion</p>
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-100 pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <h1 className="text-lg font-semibold text-gray-900">Suit Rentals</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Browse our collection and book for your occasion</p>
         </div>
+      </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8">
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Search */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Search
-              </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by brand or category..."
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Price Range */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Price Range: {formatCurrency(priceRange[0])} - {formatCurrency(priceRange[1])}
-              </label>
-              <div className="flex items-center space-x-4">
-                <input
-                  type="range"
-                  min="1500"
-                  max="3000"
-                  step="100"
-                  value={priceRange[0]}
-                  onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-                  className="flex-1"
-                />
-                <input
-                  type="range"
-                  min="1500"
-                  max="3000"
-                  step="100"
-                  value={priceRange[1]}
-                  onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                  className="flex-1"
-                />
-              </div>
-            </div>
+        {/* Filter bar */}
+        <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 mb-5 flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by brand or category..."
+              className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+          >
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat === 'all' ? 'All Categories' : cat}</option>
+            ))}
+          </select>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400 whitespace-nowrap">
+              LKR {priceRange[0].toLocaleString()} – {priceRange[1].toLocaleString()}
+            </span>
+            <input
+              type="range" min="1500" max="3000" step="100"
+              value={priceRange[1]}
+              onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+              className="w-24 accent-blue-600"
+            />
+          </div>
+          <span className="text-xs text-gray-400 ml-auto">{filteredSuits.length} suits</span>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            Showing <span className="font-semibold">{filteredSuits.length}</span> suits
-          </p>
-        </div>
-
-        {/* Suits Grid */}
+        {/* Results grid */}
         {filteredSuits.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl">
-            <Shirt className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No suits found</h3>
-            <p className="text-gray-600">Try adjusting your filters</p>
+          <div className="text-center py-20 bg-white rounded-lg border border-gray-200">
+            <Shirt className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-600">No suits match your filters</p>
+            <p className="text-xs text-gray-400 mt-1">Try adjusting your search or category</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredSuits.map(suit => (
               <div
                 key={suit.id}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
+                className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
                 onClick={() => setSelectedSuit(suit)}
               >
                 {suit.image_url ? (
-                  <img
-                    src={suit.image_url}
-                    alt={suit.brand}
-                    className="w-full h-64 object-contain bg-gray-50"
-                  />
+                  <img src={suit.image_url} alt={suit.brand} className="w-full h-44 object-cover bg-gray-50" />
                 ) : (
-                  <div className="w-full h-64 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                    <Shirt className="w-24 h-24 text-blue-400" />
+                  <div className="w-full h-44 bg-gray-100 flex items-center justify-center">
+                    <Shirt className="w-10 h-10 text-gray-300" />
                   </div>
                 )}
-                
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-bold text-xl text-gray-900">{suit.brand}</h3>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                      Available
-                    </span>
+                <div className="p-3.5">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900 leading-tight">{suit.brand}</h3>
+                    <span className="shrink-0 text-xs px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded font-medium">In Stock</span>
                   </div>
-                  
-                  <p className="text-gray-600 mb-2">{suit.category_name}</p>
-                  <p className="text-sm text-gray-500 mb-4">
-                    {suit.available_size_count} {suit.available_size_count === 1 ? 'size' : 'sizes'} available
-                  </p>
-                  
+                  <p className="text-xs text-gray-500 mb-3">{suit.category_name} · {suit.available_size_count} sizes</p>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-500">Per day</p>
-                      <p className="text-2xl font-bold text-blue-600">
-                        {formatCurrency(suit.rental_price_per_day)}
-                      </p>
+                      <span className="text-sm font-bold text-gray-900">{formatCurrency(suit.rental_price_per_day)}</span>
+                      <span className="text-xs text-gray-400 ml-0.5">/day</span>
                     </div>
                     <button
                       onClick={(e) => handleOpenBooking(e, suit)}
-                      className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700"
+                      className="text-xs font-medium px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                     >
-                      Book Now
+                      Book
                     </button>
                   </div>
                 </div>
@@ -394,133 +345,86 @@ const BrowseSuits = () => {
         )}
       </div>
 
-      {/* Suit Details Modal */}
+      {/* Suit Detail Modal */}
       {selectedSuit && !showBookingModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-5xl w-full my-8 shadow-2xl">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b bg-gray-50 rounded-t-2xl flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl w-full max-w-2xl my-4 shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedSuit.brand}</h2>
-                <p className="text-sm text-gray-500">{selectedSuit.color} | {selectedSuit.category_name}</p>
+                <h2 className="text-sm font-semibold text-gray-900">{selectedSuit.brand}</h2>
+                <p className="text-xs text-gray-500">{selectedSuit.category_name} · {selectedSuit.color}</p>
               </div>
               <button
                 onClick={() => setSelectedSuit(null)}
-                className="w-10 h-10 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors"
+                className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <X className="w-6 h-6 text-gray-600" />
+                <X className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Modal Body - Split Layout */}
-            <div className="grid lg:grid-cols-2 gap-6 p-6">
-              {/* Left Side - Image */}
-              <div className="space-y-4">
+            <div className="grid md:grid-cols-5">
+              {/* Image */}
+              <div className="md:col-span-2 border-r border-gray-100 p-5">
                 {selectedSuit.image_url ? (
                   <img
                     src={selectedSuit.image_url}
                     alt={selectedSuit.brand}
-                    className="w-full h-[500px] object-contain bg-gray-50 rounded-xl shadow-lg"
+                    className="w-full aspect-[3/4] object-contain bg-gray-50 rounded-lg"
                   />
                 ) : (
-                  <div className="w-full h-[500px] bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center rounded-xl shadow-lg">
-                    <Shirt className="w-40 h-40 text-blue-400" />
+                  <div className="w-full aspect-[3/4] bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Shirt className="w-16 h-16 text-gray-300" />
                   </div>
                 )}
-
-                {/* Quick Info Cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-blue-50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-600 mb-1">Category</p>
-                    <p className="font-bold text-sm text-gray-900">{selectedSuit.category_name}</p>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-600 mb-1">Available Sizes</p>
-                    <p className="font-bold text-lg text-gray-900">{selectedSuit.available_size_count}</p>
-                  </div>
-                </div>
               </div>
-
-              {/* Right Side - Details */}
-              <div className="space-y-6">
-                {/* Price Section */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
-                  <p className="text-sm opacity-90 mb-1">Rental Price</p>
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold">{formatCurrency(selectedSuit.rental_price_per_day)}</span>
-                    <span className="text-lg ml-2 opacity-75">/ day</span>
-                  </div>
-                  <p className="text-sm mt-2 opacity-90">Deposit: {formatCurrency(selectedSuit.deposit_amount)}</p>
-                </div>
-
-                {/* Suit Details */}
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Brand</h3>
-                      <p className="text-lg font-semibold text-gray-900">{selectedSuit.brand}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Color</h3>
-                      <p className="text-lg text-gray-900">{selectedSuit.color}</p>
-                    </div>
-                  </div>
-
+              {/* Details */}
+              <div className="md:col-span-3 p-5 flex flex-col">
+                <div className="flex-1 space-y-4">
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Available Sizes</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedSuit.available_sizes ? (
-                        selectedSuit.available_sizes.split(',').map((size, index) => (
-                          <span key={index} className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold text-sm">
-                            {size.trim()}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-sm text-gray-500">Select dates to see available sizes</span>
-                      )}
+                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Price</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-gray-900">{formatCurrency(selectedSuit.rental_price_per_day)}</span>
+                      <span className="text-xs text-gray-400">/ day</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">+ {formatCurrency(selectedSuit.deposit_amount)} refundable deposit</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-400 mb-0.5">Category</p>
+                      <p className="text-xs font-semibold text-gray-800">{selectedSuit.category_name}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-400 mb-0.5">Color</p>
+                      <p className="text-xs font-semibold text-gray-800">{selectedSuit.color}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-400 mb-0.5">Sizes Available</p>
+                      <p className="text-xs font-semibold text-gray-800">{selectedSuit.available_size_count}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <p className="text-xs text-gray-400 mb-0.5">Status</p>
+                      <p className="text-xs font-semibold text-emerald-600">Available</p>
                     </div>
                   </div>
-
                   {selectedSuit.description && (
                     <div>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Description</h3>
-                      <p className="text-gray-700 leading-relaxed">{selectedSuit.description}</p>
+                      <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Description</p>
+                      <p className="text-sm text-gray-600 leading-relaxed">{selectedSuit.description}</p>
                     </div>
                   )}
-
-                  {/* Additional Info */}
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Condition:</span>
-                      <span className="font-semibold text-gray-900 capitalize">{selectedSuit.condition_status}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Availability:</span>
-                      <span className="font-semibold text-green-600">Available Now</span>
-                    </div>
-                    {selectedSuit.total_rentals > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Total Rentals:</span>
-                        <span className="font-semibold text-gray-900">{selectedSuit.total_rentals}</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3 pt-4">
+                <div className="mt-5 pt-4 border-t border-gray-100 space-y-2">
                   <button
                     onClick={(e) => handleOpenBooking(e, selectedSuit)}
-                    className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                    className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    <Calendar className="w-5 h-5" />
-                    <span>Book This Suit</span>
+                    <Calendar className="w-4 h-4" />
+                    Book This Suit
                   </button>
                   <button
                     onClick={() => setSelectedSuit(null)}
-                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                    className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    Continue Browsing
+                    Back to browsing
                   </button>
                 </div>
               </div>
@@ -531,243 +435,113 @@ const BrowseSuits = () => {
 
       {/* Booking Modal */}
       {showBookingModal && selectedSuit && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh]">
-            {/* Modal Header - Sticky */}
-            <div className="flex-shrink-0 px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div className="text-white flex-1 pr-4">
-                  <h2 className="text-xl font-bold">{selectedSuit.brand}</h2>
-                  <p className="text-xs opacity-90">Fill in the details to complete your booking</p>
-                </div>
-                <button
-                  onClick={() => {
-                    if (bookingData.start_date || bookingData.end_date || bookingData.occasion || bookingData.delivery_address) {
-                      toast.info('Your booking details have been discarded', {
-                        position: 'top-center',
-                        autoClose: 2000
-                      });
-                    }
-                    setShowBookingModal(false);
-                    setSelectedSuit(null);
-                    setValidationErrors({});
-                  }}
-                  aria-label="Close modal"
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-white/10 hover:bg-white/30 flex items-center justify-center transition-colors"
-                >
-                  <X className="w-6 h-6 text-white" />
-                </button>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md max-h-[92vh] flex flex-col shadow-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900">Book — {selectedSuit.brand}</h2>
+                <p className="text-xs text-gray-400">{selectedSuit.category_name} · {selectedSuit.color}</p>
               </div>
-              
-              {/* Progress Indicator */}
-              <div className="mt-4 flex items-center space-x-2">
-                <div className={`h-1 flex-1 rounded-full transition-all ${
-                  bookingData.start_date && bookingData.end_date ? 'bg-white' : 'bg-white/30'
-                }`}></div>
-                <div className={`h-1 flex-1 rounded-full transition-all ${
-                  selectedSize ? 'bg-white' : 'bg-white/30'
-                }`}></div>
-                <div className={`h-1 flex-1 rounded-full transition-all ${
-                  bookingData.occasion && bookingData.delivery_address ? 'bg-white' : 'bg-white/30'
-                }`}></div>
-              </div>
+              <button
+                onClick={() => { setShowBookingModal(false); setSelectedSuit(null); setValidationErrors({}); }}
+                className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto flex-1 p-6 space-y-4">
-              {/* Suit Summary Card */}
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 flex items-center space-x-3 border-2 border-blue-200 shadow-sm">
+            {/* Scrollable body */}
+            <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
+              {/* Suit summary */}
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                 {selectedSuit.image_url ? (
-                  <img
-                    src={selectedSuit.image_url}
-                    alt={selectedSuit.brand}
-                    className="w-16 h-16 object-cover rounded-lg shadow-md"
-                  />
+                  <img src={selectedSuit.image_url} alt={selectedSuit.brand} className="w-11 h-11 object-cover rounded-md" />
                 ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-200 to-blue-300 rounded-lg flex items-center justify-center shadow-md">
-                    <Shirt className="w-8 h-8 text-blue-600" />
+                  <div className="w-11 h-11 bg-gray-200 rounded-md flex items-center justify-center">
+                    <Shirt className="w-5 h-5 text-gray-400" />
                   </div>
                 )}
-                <div className="flex-1">
-                  <h3 className="font-bold text-sm text-gray-900">{selectedSuit.brand}</h3>
-                  <div className="flex items-center space-x-2 text-xs text-gray-600 mt-1">
-                    <span>{selectedSuit.category_name}</span>
-                    <span>•</span>
-                    <span>{selectedSuit.color}</span>
-                    <span>•</span>
-                    <span className="font-semibold text-blue-600">{formatCurrency(selectedSuit.rental_price_per_day)}/day</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900">{selectedSuit.brand}</p>
+                  <p className="text-xs text-gray-500">{selectedSuit.category_name} · {selectedSuit.color}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold text-gray-900">{formatCurrency(selectedSuit.rental_price_per_day)}</p>
+                  <p className="text-xs text-gray-400">per day</p>
+                </div>
+              </div>
+
+              {/* Rental period */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Rental Period</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">Start Date <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      value={bookingData.start_date}
+                      onChange={(e) => { setBookingData({ ...bookingData, start_date: e.target.value }); setValidationErrors({ ...validationErrors, start_date: null }); }}
+                      min={new Date().toISOString().split('T')[0]}
+                      className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 ${validationErrors.start_date ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
+                    />
+                    {validationErrors.start_date && <p className="text-xs text-red-500 mt-1">{validationErrors.start_date}</p>}
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1 block">End Date <span className="text-red-500">*</span></label>
+                    <input
+                      type="date"
+                      value={bookingData.end_date}
+                      onChange={(e) => { setBookingData({ ...bookingData, end_date: e.target.value }); setValidationErrors({ ...validationErrors, end_date: null, dates: null }); }}
+                      min={bookingData.start_date || new Date().toISOString().split('T')[0]}
+                      className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 ${validationErrors.end_date || validationErrors.dates ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
+                    />
+                    {(validationErrors.end_date || validationErrors.dates) && <p className="text-xs text-red-500 mt-1">{validationErrors.end_date || validationErrors.dates}</p>}
                   </div>
                 </div>
+                {calculateDuration() > 0 && (
+                  <p className="text-xs text-blue-600 mt-2 font-medium">
+                    {calculateDuration()} day rental · LKR {calculateTotal().rental} + LKR {calculateTotal().deposit} deposit
+                  </p>
+                )}
               </div>
 
-              {/* Step 1: Rental Dates */}
-              <div className="bg-white rounded-xl border-2 border-gray-200 p-4">
-                <div className="flex items-center mb-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold mr-2">1</div>
-                  <h3 className="font-semibold text-sm text-gray-900">Select Rental Dates</h3>
-                </div>
-              {/* Rental Dates */}
-              <div className="grid md:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1" />
-                    Start Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={bookingData.start_date}
-                    onChange={(e) => {
-                      setBookingData({ ...bookingData, start_date: e.target.value });
-                      setValidationErrors({...validationErrors, start_date: null});
-                    }}
-                    min={new Date().toISOString().split('T')[0]}
-                    className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm ${
-                      validationErrors.start_date ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                    }`}
-                    aria-invalid={!!validationErrors.start_date}
-                    aria-describedby={validationErrors.start_date ? 'start-date-error' : undefined}
-                  />
-                  {validationErrors.start_date && (
-                    <p id="start-date-error" className="text-xs text-red-600 mt-1 flex items-center">
-                      <XCircle className="w-3 h-3 mr-1" />
-                      {validationErrors.start_date}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1" />
-                    End Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={bookingData.end_date}
-                    onChange={(e) => {
-                      setBookingData({ ...bookingData, end_date: e.target.value });
-                      setValidationErrors({...validationErrors, end_date: null, dates: null});
-                    }}
-                    min={bookingData.start_date || new Date().toISOString().split('T')[0]}
-                    className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm ${
-                      validationErrors.end_date || validationErrors.dates ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                    }`}
-                    aria-invalid={!!(validationErrors.end_date || validationErrors.dates)}
-                    aria-describedby={(validationErrors.end_date || validationErrors.dates) ? 'end-date-error' : undefined}
-                  />
-                  {(validationErrors.end_date || validationErrors.dates) && (
-                    <p id="end-date-error" className="text-xs text-red-600 mt-1 flex items-center">
-                      <XCircle className="w-3 h-3 mr-1" />
-                      {validationErrors.end_date || validationErrors.dates}
-                    </p>
-                  )}
-                </div>
-              </div>
-              </div>
-
-              {/* Step 2: Size Selection */}
-              <div className="bg-white rounded-xl border-2 border-gray-200 p-4">
-                <div className="flex items-center mb-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 ${
-                    bookingData.start_date && bookingData.end_date ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-                  }`}>2</div>
-                  <h3 className="font-semibold text-sm text-gray-900">Choose Your Size</h3>
-                </div>
-              {/* Size Selector - Always visible with instructions */}
-              <div className="border-2 border-blue-300 bg-blue-50/50 rounded-lg p-3">
-                <label className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
-                  <Shirt className="w-3.5 h-3.5 mr-1" />
-                  Select Size <span className="text-red-500">*</span>
-                </label>
-                
+              {/* Size */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Size <span className="text-red-500">*</span></p>
                 {!bookingData.start_date || !bookingData.end_date ? (
-                  <div className="w-full px-3 py-2.5 border-2 border-blue-200 rounded-lg bg-white text-blue-700 flex items-center text-sm">
-                    <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span>Please select rental dates above to see available sizes</span>
-                  </div>
+                  <p className="text-xs text-gray-400 italic">Select dates above to see available sizes</p>
                 ) : fetchingSizes ? (
-                  <div className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg bg-white text-gray-500 flex items-center justify-center text-sm">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                    <span>Checking availability...</span>
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="w-3 h-3 border border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    Checking availability...
                   </div>
                 ) : availableSizes.length > 0 ? (
-                  <div>
+                  <>
                     <select
                       value={selectedSize}
-                      onChange={(e) => {
-                        setSelectedSize(e.target.value);
-                        setValidationErrors({...validationErrors, size: null});
-                      }}
-                      className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all bg-white text-sm ${
-                        validationErrors.size ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-blue-300 focus:border-blue-500 focus:ring-blue-200'
-                      }`}
-                      aria-invalid={!!validationErrors.size}
+                      onChange={(e) => { setSelectedSize(e.target.value); setValidationErrors({ ...validationErrors, size: null }); }}
+                      className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 ${validationErrors.size ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
                     >
-                      <option value="">Select your size</option>
-                      {availableSizes.map((sizeOption, index) => (
-                        <option key={index} value={sizeOption.size}>
-                          {sizeOption.size} - {sizeOption.condition_status}
-                        </option>
+                      <option value="">Select size</option>
+                      {availableSizes.map((s, i) => (
+                        <option key={i} value={s.size}>{s.size} — {s.condition_status}</option>
                       ))}
                     </select>
-                    {validationErrors.size && (
-                      <p className="text-xs text-red-600 mt-1.5 ml-1 flex items-center">
-                        <XCircle className="w-3 h-3 mr-1" />
-                        {validationErrors.size}
-                      </p>
-                    )}
-                    {!validationErrors.size && (
-                      <p className="text-xs text-green-600 mt-1.5 ml-1 font-medium">
-                        ✓ {availableSizes.length} {availableSizes.length === 1 ? 'size' : 'sizes'} available for these dates
-                      </p>
-                    )}
-                  </div>
+                    {validationErrors.size && <p className="text-xs text-red-500 mt-1">{validationErrors.size}</p>}
+                  </>
                 ) : (
-                  <div className="w-full px-3 py-2.5 border-2 border-red-200 rounded-lg bg-red-50 text-red-600 flex items-center text-sm">
-                    <XCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span>No sizes available for selected dates. Please choose different dates.</span>
-                  </div>
+                  <p className="text-xs text-red-500">No sizes available for these dates. Try different dates.</p>
                 )}
               </div>
-              </div>
 
-              {calculateDuration() > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3 border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-gray-600 mb-0.5">Rental Duration</p>
-                      <p className="text-xl font-bold text-blue-600">{calculateDuration()} days</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-600 mb-0.5">Daily Rate</p>
-                      <p className="text-base font-bold text-gray-900">{formatCurrency(selectedSuit.rental_price_per_day)}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Booking Details */}
-              <div className="bg-white rounded-xl border-2 border-gray-200 p-4">
-                <div className="flex items-center mb-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2 ${
-                    selectedSize ? 'bg-blue-600 text-white' : 'bg-gray-300 text-gray-600'
-                  }`}>3</div>
-                  <h3 className="font-semibold text-sm text-gray-900">Booking Details</h3>
-                </div>
-                <div className="space-y-3">
+              {/* Occasion */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Occasion <span className="text-red-500">*</span>
-                </label>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Occasion <span className="text-red-500">*</span></label>
                 <select
                   value={bookingData.occasion}
-                  onChange={(e) => {
-                    setBookingData({ ...bookingData, occasion: e.target.value });
-                    setValidationErrors({...validationErrors, occasion: null});
-                  }}
-                  className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all text-sm ${
-                    validationErrors.occasion ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                  }`}
-                  aria-invalid={!!validationErrors.occasion}
+                  onChange={(e) => { setBookingData({ ...bookingData, occasion: e.target.value }); setValidationErrors({ ...validationErrors, occasion: null }); }}
+                  className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 ${validationErrors.occasion ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
                 >
                   <option value="">Select occasion</option>
                   <option value="Wedding">Wedding</option>
@@ -776,142 +550,74 @@ const BrowseSuits = () => {
                   <option value="Formal Event">Formal Event</option>
                   <option value="Other">Other</option>
                 </select>
-                {validationErrors.occasion && (
-                  <p className="text-xs text-red-600 mt-1 flex items-center">
-                    <XCircle className="w-3 h-3 mr-1" />
-                    {validationErrors.occasion}
-                  </p>
-                )}
+                {validationErrors.occasion && <p className="text-xs text-red-500 mt-1">{validationErrors.occasion}</p>}
               </div>
 
+              {/* Delivery address */}
               <div>
-                <label className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
-                  <MapPin className="w-3.5 h-3.5 mr-1" />
-                  Delivery Address <span className="text-red-500">*</span>
-                </label>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Delivery Address <span className="text-red-500">*</span></label>
                 <textarea
                   value={bookingData.delivery_address}
-                  onChange={(e) => {
-                    setBookingData({ ...bookingData, delivery_address: e.target.value });
-                    setValidationErrors({...validationErrors, delivery_address: null});
-                  }}
-                  placeholder="Enter your complete delivery address..."
-                  rows="2"
-                  className={`w-full px-3 py-2.5 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all resize-none text-sm ${
-                    validationErrors.delivery_address ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200'
-                  }`}
-                  aria-invalid={!!validationErrors.delivery_address}
+                  onChange={(e) => { setBookingData({ ...bookingData, delivery_address: e.target.value }); setValidationErrors({ ...validationErrors, delivery_address: null }); }}
+                  placeholder="Enter your complete delivery address"
+                  rows={2}
+                  className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-1 resize-none ${validationErrors.delivery_address ? 'border-red-300 focus:ring-red-400' : 'border-gray-200 focus:ring-blue-500 focus:border-blue-500'}`}
                 />
-                {validationErrors.delivery_address && (
-                  <p className="text-xs text-red-600 mt-1 flex items-center">
-                    <XCircle className="w-3 h-3 mr-1" />
-                    {validationErrors.delivery_address}
-                  </p>
-                )}
+                {validationErrors.delivery_address && <p className="text-xs text-red-500 mt-1">{validationErrors.delivery_address}</p>}
               </div>
 
+              {/* Special instructions */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Special Instructions (Optional)
-                </label>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Special Instructions</label>
                 <textarea
                   value={bookingData.special_instructions}
                   onChange={(e) => setBookingData({ ...bookingData, special_instructions: e.target.value })}
-                  placeholder="Any special requirements or fitting notes..."
-                  rows="2"
-                  className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none text-sm"
+                  placeholder="Any special requests or notes..."
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 />
               </div>
-              </div>
-              </div>
 
-              {/* Price Breakdown */}
+              {/* Price summary */}
               {calculateDuration() > 0 && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-sm">
-                  <h3 className="font-semibold text-sm text-gray-900 mb-3 flex items-center">
-                    <div className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold mr-2">✓</div>
-                    Price Summary
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-700">Rental ({calculateDuration()} days × {formatCurrency(selectedSuit.rental_price_per_day)}):</span>
-                      <span className="font-semibold text-gray-900">LKR {calculateTotal().rental}</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-700">Security Deposit (Refundable):</span>
-                      <span className="font-semibold text-gray-900">LKR {calculateTotal().deposit}</span>
-                    </div>
-                    <div className="border-t-2 border-green-300 pt-2 mt-2 flex justify-between items-center">
-                      <span className="text-sm font-bold text-gray-900">Total Amount:</span>
-                      <span className="text-lg font-bold text-green-600">LKR {calculateTotal().total}</span>
-                    </div>
+                <div className="rounded-lg border border-gray-200 overflow-hidden text-sm">
+                  <div className="flex justify-between px-4 py-2.5 border-b border-gray-100">
+                    <span className="text-gray-500">Rental ({calculateDuration()} days x {formatCurrency(selectedSuit.rental_price_per_day)})</span>
+                    <span className="font-medium text-gray-900">LKR {calculateTotal().rental}</span>
                   </div>
-                  <div className="mt-3 bg-green-100 rounded-lg p-2.5">
-                    <p className="text-xs text-green-800 flex items-start">
-                      <Info className="w-3.5 h-3.5 mr-1.5 flex-shrink-0 mt-0.5" />
-                      <span>Deposit refunded upon safe return. Payment required at checkout.</span>
-                    </p>
+                  <div className="flex justify-between px-4 py-2.5 border-b border-gray-100">
+                    <span className="text-gray-500">Security deposit (refundable)</span>
+                    <span className="font-medium text-gray-900">LKR {calculateTotal().deposit}</span>
+                  </div>
+                  <div className="flex justify-between px-4 py-2.5 bg-gray-50">
+                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="font-bold text-blue-600">LKR {calculateTotal().total}</span>
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="grid md:grid-cols-2 gap-3 pt-2">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={addingToCart || !bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
-                  className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-2.5 rounded-lg font-semibold text-sm hover:from-green-700 hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
-                  aria-label="Add to cart"
-                >
-                  {addingToCart ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Adding...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-4 h-4" />
-                      <span>Add to Cart</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={handleBooking}
-                  disabled={bookingLoading || !bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 rounded-lg font-semibold text-sm hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl disabled:shadow-none flex items-center justify-center space-x-2"
-                  aria-label="Book now"
-                >
-                  {bookingLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Booking...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Book Now</span>
-                      {calculateDuration() > 0 && (
-                        <span className="text-xs font-normal opacity-90">(LKR {calculateTotal().total})</span>
-                      )}
-                    </>
-                  )}
-                </button>
-              </div>
-              
-              {Object.keys(validationErrors).length > 0 && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3 flex items-start">
-                  <XCircle className="w-4 h-4 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-                  <div className="text-xs text-red-700">
-                    <p className="font-semibold mb-1">Please complete all required fields:</p>
-                    <ul className="list-disc list-inside space-y-0.5">
-                      {validationErrors.start_date && <li>Select a start date</li>}
-                      {validationErrors.end_date && <li>Select an end date</li>}
-                      {validationErrors.dates && <li>End date must be after start date</li>}
-                      {validationErrors.size && <li>Choose a size</li>}
-                      {validationErrors.occasion && <li>Select an occasion</li>}
-                      {validationErrors.delivery_address && <li>Enter delivery address</li>}
-                    </ul>
-                  </div>
-                </div>
-              )}
+            {/* Footer */}
+            <div className="flex-shrink-0 flex gap-2 px-5 py-3.5 border-t border-gray-200">
+              <button
+                onClick={handleAddToCart}
+                disabled={addingToCart || !bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
+                className="flex-1 py-2.5 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5"
+              >
+                {addingToCart
+                  ? <div className="w-3.5 h-3.5 border border-gray-500 border-t-transparent rounded-full animate-spin" />
+                  : <ShoppingCart className="w-3.5 h-3.5" />
+                }
+                Add to Cart
+              </button>
+              <button
+                onClick={handleBooking}
+                disabled={bookingLoading || !bookingData.start_date || !bookingData.end_date || !selectedSize || !bookingData.occasion || !bookingData.delivery_address || calculateDuration() <= 0 || availableSizes.length === 0}
+                className="flex-1 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5"
+              >
+                {bookingLoading && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {bookingLoading ? 'Booking...' : 'Book Now'}
+              </button>
             </div>
           </div>
         </div>

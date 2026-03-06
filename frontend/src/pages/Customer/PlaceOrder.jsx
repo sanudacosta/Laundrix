@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
-import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle, Minus } from 'lucide-react';
 import { orderAPI } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 
@@ -343,587 +343,441 @@ const PlaceOrder = () => {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="pt-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Place Laundry Order</h1>
-          <p className="text-gray-600">Schedule your laundry pickup and delivery</p>
+      {/* Page header */}
+      <div className="bg-white border-b border-gray-100 pt-20">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3">
+          <h1 className="text-lg font-semibold text-gray-900">Laundry Order</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Schedule your pickup and delivery</p>
         </div>
+      </div>
 
-        {/* Progress Steps */}
-        <div className="mb-12 sticky top-20 z-40 bg-gray-50 py-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex items-center justify-between max-w-3xl mx-auto">
-            {steps.map((s, index) => (
-              <React.Fragment key={s.number}>
-                <div className="flex flex-col items-center flex-1">
-                  <div className={`relative w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 ${
-                    step >= s.number 
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-110' 
-                      : step > s.number
-                      ? 'bg-green-500 text-white shadow-md'
-                      : 'bg-white border-2 border-gray-300 text-gray-400'
-                  }`}>
-                    {step > s.number ? (
-                      <CheckCircle className="w-7 h-7" />
-                    ) : (
-                      <s.icon className="w-6 h-6" />
-                    )}
-                    {step === s.number && (
-                      <div className="absolute -inset-1 rounded-full bg-blue-400 opacity-30 animate-ping" />
-                    )}
-                  </div>
-                  <div className="mt-3 text-center">
-                    <div className={`text-sm font-bold ${
-                      step >= s.number ? 'text-gray-900' : 'text-gray-400'
-                    }`}>
-                      {s.title}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1 hidden sm:block">
-                      {s.description}
-                    </div>
-                  </div>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4">
+        {/* Step indicator */}
+        <div className="flex items-center mb-4">
+          {steps.map((s, index) => (
+            <React.Fragment key={s.number}>
+              <div className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
+                  step >= s.number ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {step > s.number ? <CheckCircle className="w-3.5 h-3.5" /> : s.number}
                 </div>
-                {index < steps.length - 1 && (
-                  <div className={`flex-1 h-1 mx-4 mt-[-40px] transition-all duration-500 rounded-full ${
-                    step > s.number ? 'bg-gradient-to-r from-blue-600 to-green-500' : 'bg-gray-200'
-                  }`} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
+                <span className={`text-sm hidden sm:block transition-colors ${step >= s.number ? 'font-medium text-gray-900' : 'text-gray-400'}`}>
+                  {s.title}
+                </span>
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`flex-1 h-px mx-3 transition-colors ${step > s.number ? 'bg-blue-500' : 'bg-gray-200'}`} />
+              )}
+            </React.Fragment>
+          ))}
         </div>
 
-        {/* Step 1: Service Selection */}
+        {/* -- STEP 1 -- */}
         {step === 1 && (
-          <div className=" mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Service</h2>
-              
-              {/* Cleaning Type */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Cleaning Type *
-                </label>
-                {cleaningTypes.length === 0 ? (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-                    <p className="text-yellow-800">No cleaning types available. Please check your connection or contact support.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(Array.isArray(cleaningTypes) ? cleaningTypes : []).map(type => (
-                      <div
-                        key={type.id}
-                        onClick={() => handleInputChange('cleaning_type_id', type.id)}
-                        className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden shadow-md ${
-                          orderData.cleaning_type_id === type.id
-                            ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl ring-2 ring-blue-200'
-                            : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-lg hover:ring-2 hover:ring-blue-100'
-                        }`}
-                      >
-                        {orderData.cleaning_type_id === type.id && (
-                          <div className="absolute top-3 right-3 w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg z-10">
-                            <CheckCircle className="w-5 h-5 text-white" />
-                          </div>
-                        )}
-                        <div className="flex items-start space-x-3">
-                          <div className={`p-3 rounded-lg ${
-                            orderData.cleaning_type_id === type.id ? 'bg-blue-600' : 'bg-gray-100'
-                          }`}>
-                            <Sparkles className={`w-6 h-6 ${
-                              orderData.cleaning_type_id === type.id ? 'text-white' : 'text-gray-600'
-                            }`} />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg text-gray-900">{type.name}</h3>
-                            <p className="text-sm text-gray-600 mt-1 leading-relaxed">{type.description}</p>
-                            <p className="text-blue-600 font-bold text-lg mt-2">LKR {parseFloat(type.base_price).toFixed(2)}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Service Time */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Service Speed *
-                </label>
-                {serviceTimes.length === 0 ? (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
-                    <p className="text-yellow-800">No service times available. Please check your connection or contact support.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {(Array.isArray(serviceTimes) ? serviceTimes : []).map(time => (
-                        <div
-                          key={time.id}
-                          onClick={() => handleInputChange('service_time_id', time.id)}
-                          className={`relative p-5 rounded-xl border-2 cursor-pointer transition-all duration-200 overflow-hidden shadow-md ${
-                            orderData.service_time_id === time.id
-                              ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-xl ring-2 ring-blue-200'
-                              : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-lg hover:ring-2 hover:ring-blue-100'
-                          }`}
-                        >
-                          {orderData.service_time_id === time.id && (
-                            <div className="absolute top-3 right-3 w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center shadow-lg z-10">
-                              <CheckCircle className="w-5 h-5 text-white" />
-                            </div>
-                          )}
-                          <div className="flex justify-center mb-3">
-                            <Clock className={`w-8 h-8 ${
-                              orderData.service_time_id === time.id ? 'text-blue-600' : 'text-gray-400'
-                            }`} />
-                          </div>
-                          <h3 className="font-bold text-gray-900 text-center">{time.name}</h3>
-                          <p className="text-xs text-gray-600 mt-2 text-center leading-relaxed">{time.description}</p>
-                          <p className="text-blue-600 font-bold text-center mt-3 text-lg">{time.price_multiplier}x</p>
-                        </div>
-                      ))}
-                    </div>
-                    {selectedServiceDuration > 0 && (
-                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-sm text-green-800">
-                          ✓ <strong>{selectedServiceDuration} hour service selected.</strong> Your delivery will be automatically scheduled {selectedServiceDuration} hours after pickup.
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Weight */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Approximate Weight (kg) *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="50"
-                  step="0.5"
-                  value={orderData.weight_kg}
-                  onChange={(e) => handleInputChange('weight_kg', e.target.value)}
-                  className="w-32 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                />
-                <p className="text-sm text-gray-500 mt-2">Estimated weight of your laundry</p>
-              </div>
-
-              {/* Item Description */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  What items are you sending? *
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  {itemCategories.map(item => (
+          <div className="space-y-3">
+            {/* Cleaning types */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">Cleaning Type <span className="text-red-500">*</span></h2>
+              {cleaningTypes.length === 0 ? (
+                <p className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-md border border-amber-200">
+                  No cleaning types available. Please refresh the page.
+                </p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {cleaningTypes.map(type => (
                     <div
-                      key={item.id}
-                      className={`relative p-5 rounded-xl border-3 transition-all duration-200 overflow-hidden ${
-                        itemCounts[item.id]
-                          ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg ring-2 ring-blue-300'
-                          : 'border-gray-300 bg-white hover:border-blue-400 hover:shadow-md shadow-sm'
+                      key={type.id}
+                      onClick={() => handleInputChange('cleaning_type_id', type.id)}
+                      className={`relative p-3 rounded-lg border cursor-pointer transition-all ${
+                        orderData.cleaning_type_id === type.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
-                      style={{
-                        borderWidth: itemCounts[item.id] ? '3px' : '2px',
-                        boxShadow: itemCounts[item.id] 
-                          ? '0 4px 14px rgba(37, 99, 235, 0.25)' 
-                          : '0 1px 3px rgba(0,0,0,0.1)'
-                      }}
                     >
-                      {itemCounts[item.id] && (
-                        <div className="absolute top-3 right-3 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-md z-10">
-                          <CheckCircle className="w-4 h-4 text-white" />
+                      {orderData.cleaning_type_id === type.id && (
+                        <div className="absolute top-2.5 right-2.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-3 h-3 text-white" />
                         </div>
                       )}
-                      
-                      <div className="flex items-center justify-center mb-3">
-                        <Shirt className={`w-8 h-8 ${
-                          itemCounts[item.id] ? 'text-blue-600' : 'text-gray-400'
-                        }`} />
-                      </div>
-                      
-                      <div className="text-sm font-bold text-gray-700 text-center mb-3">{item.label}</div>
-                      
-                      {!itemCounts[item.id] ? (
-                        <button
-                          onClick={() => handleItemToggle(item.id)}
-                          className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
-                        >
-                          + Add
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => decrementItem(item.id)}
-                            className="w-9 h-9 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 font-bold transition-all active:scale-95 border-2 border-red-300"
-                          >
-                            −
-                          </button>
-                          <input
-                            type="number"
-                            min="1"
-                            value={itemCounts[item.id]}
-                            onChange={(e) => handleItemCountChange(item.id, e.target.value)}
-                            className="w-16 text-center border-2 border-blue-400 rounded-lg py-2 font-bold text-blue-700 bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <button
-                            onClick={() => incrementItem(item.id)}
-                            className="w-9 h-9 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 font-bold transition-all active:scale-95 border-2 border-green-300"
-                          >
-                            +
-                          </button>
-                        </div>
-                      )}
+                      <p className="text-sm font-semibold text-gray-900 pr-5">{type.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{type.description}</p>
+                      <p className="text-sm font-bold text-blue-600 mt-1">
+                        LKR {parseFloat(type.base_price).toFixed(2)}
+                        <span className="text-xs font-normal text-gray-400"> / kg</span>
+                      </p>
                     </div>
                   ))}
                 </div>
-                
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other items or additional details
-                  </label>
-                  <input
-                    type="text"
-                    value={customItems}
-                    onChange={(e) => setCustomItems(e.target.value)}
-                    placeholder="e.g., 5 shirts, 3 silk scarves, baby clothes..."
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                  />
-                </div>
-                
-                {(Object.keys(itemCounts).length > 0 || customItems) && (
-                  <div className="mt-6 p-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl shadow-md">
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 bg-green-500 rounded-lg">
-                        <Package className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-green-900 text-lg mb-2">Selected Items</h4>
-                        <p className="text-green-800 leading-relaxed">
-                          {buildItemDescription() || 'None'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
+            </div>
 
-              {/* Price Preview */}
-              {orderData.cleaning_type_id && orderData.service_time_id && (
-                <div className="bg-blue-50 rounded-xl p-6 mb-6">
-                  <h3 className="font-bold text-gray-900 mb-3">Price Estimate</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Base Rate ({orderData.weight_kg} kg):</span>
-                      <span>LKR {calculatePrice().subtotal}</span>
+            {/* Service speed */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">Service Speed <span className="text-red-500">*</span></h2>
+              {serviceTimes.length === 0 ? (
+                <p className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-md border border-amber-200">
+                  No service times available.
+                </p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {serviceTimes.map(time => (
+                    <div
+                      key={time.id}
+                      onClick={() => handleInputChange('service_time_id', time.id)}
+                      className={`relative p-3 rounded-lg border cursor-pointer transition-all ${
+                        orderData.service_time_id === time.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {orderData.service_time_id === time.id && (
+                        <div className="absolute top-2.5 right-2.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <p className="text-sm font-semibold text-gray-900">{time.name}</p>
+                      </div>
+                      <p className="text-xs text-gray-500 leading-relaxed">{time.description}</p>
+                      <p className="text-xs font-medium text-blue-600 mt-1">{time.price_multiplier}x price</p>
                     </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Tax (8%):</span>
-                      <span>LKR {calculatePrice().tax}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-bold text-lg text-gray-900">
-                      <span>Total:</span>
-                      <span>LKR {calculatePrice().total}</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
+              {selectedServiceDuration > 0 && (
+                <p className="text-xs text-gray-500 mt-2 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100 flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                  <span><strong>{selectedServiceDuration}-hour</strong> service — delivery auto-scheduled in next step</span>
+                </p>
+              )}
+            </div>
 
+            {/* Weight & items */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Laundry Details</h2>
+              <div className="mb-3">
+                <label className="text-xs text-gray-500 block mb-1">Approximate weight (kg)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number" min="1" max="50" step="0.5"
+                    value={orderData.weight_kg}
+                    onChange={(e) => handleInputChange('weight_kg', e.target.value)}
+                    className="w-20 px-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <span className="text-xs text-gray-400">kg</span>
+                </div>
+              </div>
+
+              <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+                Items you're sending <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-2">
+                {itemCategories.map(item => (
+                  <div
+                    key={item.id}
+                    className={`rounded-lg border p-2 transition-all ${
+                      itemCounts[item.id] ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <p className="text-xs font-medium text-gray-700 mb-1.5">{item.label}</p>
+                    {!itemCounts[item.id] ? (
+                      <button
+                        onClick={() => handleItemToggle(item.id)}
+                        className="w-full py-1 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors"
+                      >
+                        + Add
+                      </button>
+                    ) : (
+                      <div className="flex items-center justify-between gap-1">
+                        <button onClick={() => decrementItem(item.id)} className="w-6 h-6 flex items-center justify-center bg-white border border-gray-200 rounded text-gray-600 hover:bg-gray-50"><Minus className="w-3 h-3" /></button>
+                        <span className="text-xs font-bold text-blue-700 w-5 text-center">{itemCounts[item.id]}</span>
+                        <button onClick={() => incrementItem(item.id)} className="w-6 h-6 flex items-center justify-center bg-white border border-gray-200 rounded text-gray-600 hover:bg-gray-50 text-sm leading-none">+</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Other items</label>
+                <input
+                  type="text"
+                  value={customItems}
+                  onChange={(e) => setCustomItems(e.target.value)}
+                  placeholder="e.g. silk scarves, baby clothes..."
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {(Object.keys(itemCounts).length > 0 || customItems) && (
+                <div className="mt-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-xs text-gray-400 mb-0.5">Summary</p>
+                  <p className="text-xs text-gray-700">{buildItemDescription()}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Price estimate */}
+            {orderData.cleaning_type_id && orderData.service_time_id && (
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Price Estimate</h3>
+                </div>
+                <div className="divide-y divide-gray-100 text-sm">
+                  <div className="flex justify-between px-4 py-2">
+                    <span className="text-gray-500">Subtotal ({orderData.weight_kg} kg)</span>
+                    <span className="font-medium text-gray-900">LKR {calculatePrice().subtotal}</span>
+                  </div>
+                  <div className="flex justify-between px-4 py-2">
+                    <span className="text-gray-500">Tax (8%)</span>
+                    <span className="font-medium text-gray-900">LKR {calculatePrice().tax}</span>
+                  </div>
+                  <div className="flex justify-between px-4 py-2 bg-gray-50">
+                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="font-bold text-blue-600">LKR {calculatePrice().total}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setStep(2)}
+              disabled={!orderData.cleaning_type_id || !orderData.service_time_id || (Object.keys(itemCounts).length === 0 && !customItems.trim())}
+              className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              Continue to Schedule
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* -- STEP 2 -- */}
+        {step === 2 && (
+          <div className="space-y-3">
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Schedule Pickup</h2>
+
+              <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">Pickup Date <span className="text-red-500">*</span></label>
+                  <select
+                    value={orderData.pickup_date}
+                    onChange={(e) => handleInputChange('pickup_date', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select date</option>
+                    {getAvailableDates().map(date => (
+                      <option key={date} value={date}>
+                        {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">Pickup Time <span className="text-red-500">*</span></label>
+                  <select
+                    value={orderData.pickup_time}
+                    onChange={(e) => handleInputChange('pickup_time', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select time</option>
+                    {timeSlots.map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Delivery (auto) */}
+              <div className="border-t border-gray-100 pt-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="w-3.5 h-3.5 text-gray-400" />
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Estimated Delivery</h3>
+                </div>
+
+                {deliveryAdjusted && (
+                  <div className="mb-2 flex items-start gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">
+                      Delivery adjusted to <strong>6:00 AM on {deliveryAdjusted}</strong> — outside our operating hours (6 AM – 11 PM).
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Date</label>
+                    <input
+                      type="text"
+                      value={orderData.delivery_date || '—'}
+                      readOnly
+                      className="w-full px-3 py-2 text-sm border border-gray-100 rounded-md bg-gray-50 text-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Time</label>
+                    <input
+                      type="text"
+                      value={orderData.delivery_time || '—'}
+                      readOnly
+                      className="w-full px-3 py-2 text-sm border border-gray-100 rounded-md bg-gray-50 text-gray-500"
+                    />
+                  </div>
+                </div>
+                {selectedServiceDuration > 0 && orderData.pickup_date && orderData.pickup_time && (
+                  <p className="text-xs text-gray-400 mt-1.5">Pickup + {selectedServiceDuration}h service duration</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
               <button
-                onClick={() => setStep(2)}
-                disabled={!orderData.cleaning_type_id || !orderData.service_time_id || (Object.keys(itemCounts).length === 0 && !customItems.trim())}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
+                onClick={() => setStep(1)}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
-                <span>Continue to Schedule</span>
-                <ChevronRight className="w-6 h-6" />
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                disabled={!orderData.pickup_date || !orderData.pickup_time}
+                className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                Continue
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Schedule */}
-        {step === 2 && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Schedule Pickup & Delivery</h2>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Pickup */}
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-blue-600" />
-                    Pickup Details
-                  </h3>
-                  
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Pickup Date *
-                    </label>
-                    <select
-                      value={orderData.pickup_date}
-                      onChange={(e) => handleInputChange('pickup_date', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">Select date</option>
-                      {getAvailableDates().map(date => (
-                        <option key={date} value={date}>
-                          {new Date(date).toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Pickup Time *
-                    </label>
-                    <select
-                      value={orderData.pickup_time}
-                      onChange={(e) => handleInputChange('pickup_time', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                    >
-                      <option value="">Select time</option>
-                      {timeSlots.map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Delivery */}
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center">
-                    <Package className="w-5 h-5 mr-2 text-green-600" />
-                    Delivery Details (Auto-calculated)
-                  </h3>
-                  
-                  {selectedServiceDuration > 0 && (
-                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        <strong>Service Duration:</strong> {selectedServiceDuration} hours
-                        <br />
-                        Delivery will be automatically scheduled {selectedServiceDuration} hours after your pickup time.
-                      </p>
-                    </div>
-                  )}
-                  
-                  {deliveryAdjusted && (
-                    <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg flex items-start space-x-2">
-                      <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm text-amber-800">
-                        <strong>Delivery time adjusted.</strong> Your selected pickup time + service duration falls outside our operating hours (6 AM – 11 PM). Delivery has been rescheduled to <strong>6:00 AM on {deliveryAdjusted}</strong>.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Delivery Date
-                    </label>
-                    <input
-                      type="text"
-                      value={orderData.delivery_date || 'Will be calculated after pickup selection'}
-                      readOnly
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600"
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Delivery Time
-                    </label>
-                    <input
-                      type="text"
-                      value={orderData.delivery_time || 'Will be calculated after pickup selection'}
-                      readOnly
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-600"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex space-x-4 mt-8">
-                <button
-                  onClick={() => setStep(1)}
-                  className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-4 rounded-xl font-bold hover:border-gray-400 hover:shadow-md flex items-center justify-center space-x-2 transition-all duration-200"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                  <span>Back</span>
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!orderData.pickup_date || !orderData.pickup_time}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
-                >
-                  <span>Continue to Confirm</span>
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Confirmation */}
+        {/* -- STEP 3 -- */}
         {step === 3 && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Addresses & Final Details</h2>
+          <div className="space-y-3">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+              <h2 className="text-sm font-semibold text-gray-900">Pickup & Delivery</h2>
 
-              <div className="mb-6">
-                <label className="text-sm font-bold text-gray-700 mb-3 flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  <span>Pickup Address *</span>
-                </label>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Pickup Address <span className="text-red-500">*</span></label>
                 <textarea
                   value={orderData.pickup_address}
                   onChange={(e) => handleInputChange('pickup_address', e.target.value)}
                   placeholder="Enter your pickup address..."
-                  rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 />
               </div>
 
-              <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                <label className="flex items-center cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    id="sameAddress"
-                    checked={sameAddress}
-                    onChange={(e) => handleSameAddressToggle(e.target.checked)}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span className="ml-3 text-sm font-bold text-gray-700 group-hover:text-blue-700 transition-colors flex items-center space-x-2">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Delivery address is same as pickup address</span>
-                  </span>
-                </label>
-              </div>
-                
-              <div className="mb-6">
-                <label className="text-sm font-bold text-gray-700 mb-3 flex items-center space-x-2">
-                  <Truck className="w-4 h-4 text-blue-600" />
-                  <span>Delivery Address *</span>
-                </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sameAddress}
+                  onChange={(e) => handleSameAddressToggle(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-600">Same address for delivery</span>
+              </label>
+
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Delivery Address <span className="text-red-500">*</span></label>
                 <textarea
                   value={orderData.delivery_address}
                   onChange={(e) => handleInputChange('delivery_address', e.target.value)}
                   placeholder="Enter your delivery address..."
-                  rows="3"
+                  rows={2}
                   disabled={sameAddress}
-                  className={`w-full px-4 py-3 border-2 rounded-xl transition-all ${
-                    sameAddress 
-                      ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed' 
-                      : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none resize-none transition-colors ${
+                    sameAddress
+                      ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+                      : 'border-gray-200 focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
                   }`}
                 />
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Detergent Preference
-                </label>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Detergent Preference</label>
                 <select
                   value={orderData.detergent_preference}
                   onChange={(e) => handleInputChange('detergent_preference', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="standard">Standard Detergent</option>
+                  <option value="standard">Standard</option>
                   <option value="sensitive">Sensitive Skin</option>
                   <option value="eco">Eco-Friendly</option>
                   <option value="fragrance-free">Fragrance Free</option>
                 </select>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Special Instructions (Optional)
-                </label>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Special Instructions</label>
                 <textarea
                   value={orderData.special_instructions}
                   onChange={(e) => handleInputChange('special_instructions', e.target.value)}
-                  placeholder="Any special requirements or instructions..."
-                  rows="4"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                  placeholder="Any special requirements..."
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"
                 />
               </div>
+            </div>
 
-              {/* Order Summary */}
-              <div className="bg-gray-50 rounded-xl p-6 mb-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-4">Order Summary</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Items:</span>
-                    <span className="font-medium">{buildItemDescription() || 'Not specified'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Service:</span>
-                    <span className="font-medium">
-                      {(Array.isArray(cleaningTypes) ? cleaningTypes : []).find(t => t.id === parseInt(orderData.cleaning_type_id))?.name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Speed:</span>
-                    <span className="font-medium">
-                      {(Array.isArray(serviceTimes) ? serviceTimes : []).find(t => t.id === parseInt(orderData.service_time_id))?.name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Weight:</span>
-                    <span className="font-medium">{orderData.weight_kg} kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Pickup:</span>
-                    <span className="font-medium">
-                      {orderData.pickup_date} at {orderData.pickup_time}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Delivery:</span>
-                    <span className="font-medium">
-                      {orderData.delivery_date} at {orderData.delivery_time}
-                    </span>
-                  </div>
-                  <div className="border-t pt-3 flex justify-between font-bold text-xl text-gray-900">
-                    <span>Total:</span>
-                    <span className="text-blue-600">LKR {calculatePrice().total}</span>
-                  </div>
+            {/* Order summary */}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Order Summary</h3>
+              </div>
+              <div className="divide-y divide-gray-100 text-sm">
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-gray-500 shrink-0 mr-4">Items</span>
+                  <span className="text-gray-800 text-right text-xs">{buildItemDescription() || '—'}</span>
+                </div>
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-gray-500">Service</span>
+                  <span className="text-gray-800">{(Array.isArray(cleaningTypes) ? cleaningTypes : []).find(t => t.id === parseInt(orderData.cleaning_type_id))?.name || '—'}</span>
+                </div>
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-gray-500">Speed</span>
+                  <span className="text-gray-800">{(Array.isArray(serviceTimes) ? serviceTimes : []).find(t => t.id === parseInt(orderData.service_time_id))?.name || '—'}</span>
+                </div>
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-gray-500">Weight</span>
+                  <span className="text-gray-800">{orderData.weight_kg} kg</span>
+                </div>
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-gray-500">Pickup</span>
+                  <span className="text-gray-800">{orderData.pickup_date} at {orderData.pickup_time}</span>
+                </div>
+                <div className="flex justify-between px-4 py-2">
+                  <span className="text-gray-500">Delivery</span>
+                  <span className="text-gray-800">{orderData.delivery_date} at {orderData.delivery_time}</span>
+                </div>
+                <div className="flex justify-between px-4 py-2 bg-gray-50">
+                  <span className="font-semibold text-gray-900">Total</span>
+                  <span className="font-bold text-blue-600">LKR {calculatePrice().total}</span>
                 </div>
               </div>
+            </div>
 
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setStep(2)}
-                  disabled={loading}
-                  className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-4 rounded-xl font-bold hover:border-gray-400 hover:shadow-md flex items-center justify-center space-x-2 transition-all duration-200 disabled:opacity-50"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                  <span>Back</span>
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={loading || !orderData.pickup_address || !orderData.delivery_address}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-4 rounded-xl font-bold hover:from-green-700 hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-3 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Placing Order...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-6 h-6" />
-                      <span>Place Order</span>
-                    </>
-                  )}
-                </button>
-              </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setStep(2)}
+                disabled={loading}
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading || !orderData.pickup_address || !orderData.delivery_address}
+                className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                {loading
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <CheckCircle className="w-4 h-4" />
+                }
+                {loading ? 'Placing Order...' : 'Place Order'}
+              </button>
             </div>
           </div>
         )}
