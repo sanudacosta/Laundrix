@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, Zap, CheckCircle, AlertCircle, ArrowLeft, Check, X } from 'lucide-react';
 import Input from '../../components/ui/Input';
@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -51,10 +52,16 @@ const LoginPage = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      const dashboardPath = result.data.role === 'admin' ? '/admin/dashboard' 
-        : result.data.role === 'employee' ? '/employee/dashboard' 
-        : '/customer/dashboard';
-      navigate(dashboardPath);
+      const role = result.data.role;
+      if (role === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (role === 'employee') {
+        navigate('/employee/dashboard');
+      } else {
+        // Respect redirect state for customers arriving from a public page
+        const redirectTo = location.state?.redirect || '/customer/browse-suits';
+        navigate(redirectTo);
+      }
     } else {
       setError(result.message);
       setShake(true);

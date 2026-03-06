@@ -52,117 +52,116 @@ const EmployeeLayout = ({ children }) => {
         breakpoint="lg"
         collapsedWidth="80"
         style={{
-          overflow: 'auto',
+          overflow: 'hidden',
           height: '100vh',
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
+          background: '#0f172a',
+          boxShadow: '1px 0 0 rgba(255,255,255,0.06)'
         }}
       >
-        {/* Logo Section */}
-        <div style={{ 
-          padding: collapsed ? '20px 16px' : '24px', 
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px'
-        }}>
-          <div style={{
-            width: collapsed ? '40px' : '48px',
-            height: collapsed ? '40px' : '48px',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            borderRadius: '12px',
+        {/* Flex column wrapper fills the full sider height */}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+          {/* Logo Section */}
+          <div style={{ 
+            padding: collapsed ? '20px 16px' : '24px', 
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)'
+            gap: '12px',
+            flexShrink: 0
           }}>
-            <ThunderboltOutlined style={{ fontSize: collapsed ? '20px' : '24px', color: 'white' }} />
-          </div>
-          {!collapsed && (
-            <div>
-              <div style={{ 
-                color: 'white', 
-                fontSize: '18px', 
-                fontWeight: '700',
-                letterSpacing: '0.5px',
-                lineHeight: '1.2'
-              }}>
-                Laundrix
-              </div>
-              <div style={{ 
-                color: 'rgba(255,255,255,0.6)', 
-                fontSize: '11px',
-                fontWeight: '500',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                Employee Panel
-              </div>
+            <div style={{
+              width: collapsed ? '40px' : '48px',
+              height: collapsed ? '40px' : '48px',
+              background: '#059669',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(5,150,105,0.3)'
+            }}>
+              <ThunderboltOutlined style={{ fontSize: collapsed ? '20px' : '24px', color: 'white' }} />
             </div>
-          )}
-        </div>
-
-        {/* Menu */}
-        <Menu 
-          theme="dark" 
-          mode="inline" 
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          style={{ 
-            background: 'transparent',
-            border: 'none',
-            padding: '16px 8px'
-          }}
-          className="modern-menu"
-        />
-
-        {/* User Section */}
-        {!collapsed && (
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '20px',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            background: 'rgba(0,0,0,0.2)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Avatar 
-                style={{ 
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  flexShrink: 0
-                }} 
-                size={40}
-              >
-                {user?.full_name?.charAt(0) || 'E'}
-              </Avatar>
-              <div style={{ flex: 1, minWidth: 0 }}>
+            {!collapsed && (
+              <div>
                 <div style={{ 
                   color: 'white', 
-                  fontSize: '13px', 
-                  fontWeight: '600',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  fontSize: '18px', 
+                  fontWeight: '700',
+                  letterSpacing: '0.5px',
+                  lineHeight: '1.2'
                 }}>
-                  {user?.full_name || 'Employee'}
+                  Laundrix
                 </div>
                 <div style={{ 
                   color: 'rgba(255,255,255,0.6)', 
-                  fontSize: '11px'
+                  fontSize: '11px',
+                  fontWeight: '500',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
                 }}>
-                  Team Member
+                  Employee Panel
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Scrollable Menu */}
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }} className="emp-menu-scroll">
+            <Menu 
+              theme="dark" 
+              mode="inline" 
+              selectedKeys={[location.pathname]}
+              items={menuItems}
+              style={{ 
+                background: 'transparent',
+                border: 'none',
+                padding: '12px 8px'
+              }}
+              className="modern-menu"
+            />
+          </div>
+
+          {/* User Section — always visible at bottom */}
+          <div style={{
+            padding: collapsed ? '16px 12px' : '16px 20px',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(0,0,0,0.2)',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Avatar 
+                style={{ background: '#059669', flexShrink: 0 }} 
+                size={36}
+              >
+                {user?.full_name?.charAt(0)?.toUpperCase() || 'E'}
+              </Avatar>
+              {!collapsed && (
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ 
+                    color: 'white', 
+                    fontSize: '13px', 
+                    fontWeight: '600',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {user?.full_name || 'Employee'}
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>
+                    Team Member
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+
+        </div>
 
         <style>{`
           .modern-menu .ant-menu-item {
@@ -176,12 +175,22 @@ const EmployeeLayout = ({ children }) => {
             background: rgba(255,255,255,0.08) !important;
           }
           .modern-menu .ant-menu-item-selected {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+            background: rgba(5, 150, 105, 0.15) !important;
+            border-left: 3px solid #059669 !important;
+            color: #34d399 !important;
+          }
+          .modern-menu .ant-menu-item-selected .ant-menu-title-content a {
+            color: #6ee7b7 !important;
+          }
+          .modern-menu .ant-menu-item-selected .anticon {
+            color: #34d399 !important;
           }
           .modern-menu .ant-menu-item-selected::after {
             display: none !important;
           }
+          .emp-menu-scroll::-webkit-scrollbar { width: 3px; }
+          .emp-menu-scroll::-webkit-scrollbar-track { background: transparent; }
+          .emp-menu-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
         `}</style>
       </Sider>
       <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
@@ -218,24 +227,17 @@ const EmployeeLayout = ({ children }) => {
               onClick={logout} 
               style={{ 
                 padding: '8px 24px', 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: '#059669',
                 color: 'white', 
                 border: 'none', 
                 borderRadius: '8px', 
                 cursor: 'pointer',
                 fontWeight: '500',
                 fontSize: '14px',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
+                transition: 'background 0.2s'
               }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
-              }}
+              onMouseEnter={(e) => { e.target.style.background = '#047857'; }}
+              onMouseLeave={(e) => { e.target.style.background = '#059669'; }}
             >
               Logout
             </button>
@@ -244,7 +246,7 @@ const EmployeeLayout = ({ children }) => {
         <Content style={{ 
           margin: '24px 16px',
           padding: 0,
-          background: '#f7f8fc',
+          background: '#f1f5f9',
           minHeight: 'calc(100vh - 112px)'
         }}>
           {children}

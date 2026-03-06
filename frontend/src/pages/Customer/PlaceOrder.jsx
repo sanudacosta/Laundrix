@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle } from 'lucide-react';
@@ -6,7 +7,8 @@ import { orderAPI } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 
 const PlaceOrder = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [cleaningTypes, setCleaningTypes] = useState([]);
@@ -15,6 +17,7 @@ const PlaceOrder = () => {
   const [itemCounts, setItemCounts] = useState({});
   const [customItems, setCustomItems] = useState('');
   const [sameAddress, setSameAddress] = useState(false);
+  const [deliveryAdjusted, setDeliveryAdjusted] = useState(null); // null or adjusted date string
   
   const steps = [
     { number: 1, title: 'Service & Items', icon: ShoppingBag, description: 'Choose service type and items' },
@@ -86,8 +89,7 @@ const PlaceOrder = () => {
       setServiceTimes(Array.isArray(timesData) ? timesData : []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      console.error('Error details:', error.response?.data);
-      alert('Failed to load service options: ' + (error.response?.data?.message || error.message));
+      toast.error('Failed to load service options. Please refresh the page.');
       setCleaningTypes([]);
       setServiceTimes([]);
     } finally {
@@ -184,20 +186,39 @@ const PlaceOrder = () => {
     return items.join(', ');
   };
 
+  const BUSINESS_OPEN_HOUR  = 6;  // 6:00 AM
+  const BUSINESS_CLOSE_HOUR = 23; // 11:00 PM
+
   const calculateDeliveryDateTime = (pickupDate, pickupTime) => {
     if (!pickupDate || !pickupTime || selectedServiceDuration === 0) return;
-    
-    // Create pickup datetime
+
+    // Build the raw delivery datetime by adding service duration
     const pickupDateTime = new Date(`${pickupDate}T${pickupTime}:00`);
-    
-    // Add service duration hours
-    const deliveryDateTime = new Date(pickupDateTime.getTime() + selectedServiceDuration * 60 * 60 * 1000);
-    
-    // Extract date and time
+    let deliveryDateTime = new Date(pickupDateTime.getTime() + selectedServiceDuration * 60 * 60 * 1000);
+
+    // If delivery falls outside business hours (before 6 AM or at/after 11 PM),
+    // push it to 6:00 AM the next business day.
+    const deliveryHour = deliveryDateTime.getHours();
+    const deliveryMinute = deliveryDateTime.getMinutes();
+    const totalMinutes = deliveryHour * 60 + deliveryMinute;
+
+    const closeMinutes = BUSINESS_CLOSE_HOUR * 60; // 23:00
+    const openMinutes  = BUSINESS_OPEN_HOUR  * 60; // 06:00
+
+    if (totalMinutes >= closeMinutes || totalMinutes < openMinutes) {
+      // Roll forward to 6 AM — if we're already past midnight add extra day only if < openMinutes
+      deliveryDateTime.setDate(deliveryDateTime.getDate() + (totalMinutes < openMinutes ? 0 : 1));
+      deliveryDateTime.setHours(BUSINESS_OPEN_HOUR, 0, 0, 0);
+      setDeliveryAdjusted(
+        deliveryDateTime.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
+      );
+    } else {
+      setDeliveryAdjusted(null);
+    }
+
     const deliveryDate = deliveryDateTime.toISOString().split('T')[0];
     const deliveryTime = deliveryDateTime.toTimeString().slice(0, 5);
-    
-    // Update order data
+
     setOrderData(prev => ({
       ...prev,
       delivery_date: deliveryDate,
@@ -230,6 +251,11 @@ const PlaceOrder = () => {
   };
 
   const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      toast.info('Please log in to place an order');
+      navigate('/login', { state: { redirect: '/customer/place-order' } });
+      return;
+    }
     try {
       setLoading(true);
       const price = calculatePrice();
@@ -309,8 +335,8 @@ const PlaceOrder = () => {
   };
 
   const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', 
-    '13:00', '14:00', '15:00', '16:00', '17:00'
+    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
+    '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ];
 
   return (
@@ -688,6 +714,15 @@ const PlaceOrder = () => {
                     </div>
                   )}
                   
+                  {deliveryAdjusted && (
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg flex items-start space-x-2">
+                      <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-800">
+                        <strong>Delivery time adjusted.</strong> Your selected pickup time + service duration falls outside our operating hours (6 AM – 11 PM). Delivery has been rescheduled to <strong>6:00 AM on {deliveryAdjusted}</strong>.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="mb-4">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Delivery Date

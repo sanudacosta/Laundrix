@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import { Search, Filter, Shirt, Calendar, MapPin, X, ChevronLeft, ChevronRight, XCircle, ShoppingCart, Info } from 'lucide-react';
@@ -6,7 +7,8 @@ import { rentalAPI } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 
 const BrowseSuits = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [suits, setSuits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -213,6 +215,24 @@ const BrowseSuits = () => {
     }
   };
 
+  const handleOpenBooking = (e, suit) => {
+    if (e) e.stopPropagation();
+    if (!isAuthenticated) {
+      toast.info('Please log in to book a suit');
+      navigate('/login', { state: { redirect: '/customer/browse-suits' } });
+      return;
+    }
+    setSelectedSuit(suit);
+    setBookingData({
+      start_date: '',
+      end_date: '',
+      occasion: '',
+      delivery_address: user?.address || '',
+      special_instructions: ''
+    });
+    setShowBookingModal(true);
+  };
+
   const formatCurrency = (amount) => {
     return `LKR ${parseFloat(amount).toFixed(2)}`;
   };
@@ -361,18 +381,7 @@ const BrowseSuits = () => {
                       </p>
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSuit(suit);
-                        setBookingData({
-                          start_date: '',
-                          end_date: '',
-                          occasion: '',
-                          delivery_address: user?.address || '',
-                          special_instructions: ''
-                        });
-                        setShowBookingModal(true);
-                      }}
+                      onClick={(e) => handleOpenBooking(e, suit)}
                       className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700"
                     >
                       Book Now
@@ -501,16 +510,7 @@ const BrowseSuits = () => {
                 {/* Action Buttons */}
                 <div className="space-y-3 pt-4">
                   <button
-                    onClick={() => {
-                      setBookingData({
-                        start_date: '',
-                        end_date: '',
-                        occasion: '',
-                        delivery_address: user?.address || '',
-                        special_instructions: ''
-                      });
-                      setShowBookingModal(true);
-                    }}
+                    onClick={(e) => handleOpenBooking(e, selectedSuit)}
                     className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
                   >
                     <Calendar className="w-5 h-5" />

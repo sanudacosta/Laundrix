@@ -385,7 +385,7 @@ const EmployeeDashboard = () => {
               borderRadius: '16px',
               border: 'none',
               boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              background: '#059669'
             }}
             styles={{ body: { padding: '28px' } }}
           >
@@ -466,7 +466,7 @@ const EmployeeDashboard = () => {
                     borderRadius: '16px',
                     border: 'none',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: '#4f46e5',
                     color: 'white'
                   }}
                   styles={{ body: { padding: '32px', textAlign: 'center' } }}
@@ -485,7 +485,7 @@ const EmployeeDashboard = () => {
                     borderRadius: '16px',
                     border: 'none',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    background: '#059669',
                     color: 'white'
                   }}
                   styles={{ body: { padding: '32px', textAlign: 'center' } }}

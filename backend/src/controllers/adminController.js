@@ -266,22 +266,23 @@ export const updateServiceTime = async (req, res, next) => {
 export const createSuit = async (req, res, next) => {
   try {
     const {
-      suit_code, category_id, name, description, size, color, brand,
-      condition_status, rental_price_per_day, deposit_amount, purchase_price, image_url
+      product_code, category_id, name, description, color, brand,
+      rental_price_per_day, deposit_amount, purchase_price, image_url, is_active
     } = req.body;
-    
+
     const [result] = await db.query(
-      `INSERT INTO suits 
-       (suit_code, category_id, name, description, size, color, brand, condition_status,
-        rental_price_per_day, deposit_amount, purchase_price, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [suit_code, category_id, name, description, size, color, brand, condition_status,
-       rental_price_per_day, deposit_amount, purchase_price, image_url]
+      `INSERT INTO suit_products
+       (product_code, category_id, name, brand, description, color,
+        rental_price_per_day, deposit_amount, purchase_price, image_url, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [product_code, category_id, name, brand, description, color,
+       rental_price_per_day, deposit_amount, purchase_price || null, image_url || null,
+       is_active !== undefined ? is_active : true]
     );
-    
+
     res.status(201).json({
       success: true,
-      message: 'Suit added to inventory successfully',
+      message: 'Suit product created successfully',
       data: { suitId: result.insertId }
     });
   } catch (error) {
@@ -293,26 +294,28 @@ export const updateSuit = async (req, res, next) => {
   try {
     const { id } = req.params;
     const {
-      name, description, size, color, brand, condition_status,
-      rental_price_per_day, deposit_amount, is_available
+      product_code, category_id, name, description, color, brand,
+      rental_price_per_day, deposit_amount, purchase_price, image_url, is_active
     } = req.body;
-    
+
     await db.query(
-      `UPDATE suits 
-       SET name = COALESCE(?, name),
-           description = COALESCE(?, description),
-           size = COALESCE(?, size),
-           color = COALESCE(?, color),
-           brand = COALESCE(?, brand),
-           condition_status = COALESCE(?, condition_status),
+      `UPDATE suit_products
+       SET product_code         = COALESCE(?, product_code),
+           category_id          = COALESCE(?, category_id),
+           name                 = COALESCE(?, name),
+           brand                = COALESCE(?, brand),
+           description          = COALESCE(?, description),
+           color                = COALESCE(?, color),
            rental_price_per_day = COALESCE(?, rental_price_per_day),
-           deposit_amount = COALESCE(?, deposit_amount),
-           is_available = COALESCE(?, is_available)
+           deposit_amount       = COALESCE(?, deposit_amount),
+           purchase_price       = COALESCE(?, purchase_price),
+           image_url            = COALESCE(?, image_url),
+           is_active            = COALESCE(?, is_active)
        WHERE id = ?`,
-      [name, description, size, color, brand, condition_status,
-       rental_price_per_day, deposit_amount, is_available, id]
+      [product_code, category_id, name, brand, description, color,
+       rental_price_per_day, deposit_amount, purchase_price, image_url, is_active, id]
     );
-    
+
     res.json({
       success: true,
       message: 'Suit updated successfully'
@@ -325,19 +328,22 @@ export const updateSuit = async (req, res, next) => {
 export const deleteSuit = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    // Check if suit has active rentals
+
+    // Check if any inventory item for this product has active rentals
     const [activeRentals] = await db.query(
-      'SELECT id FROM suit_rentals WHERE suit_id = ? AND rental_status IN (?, ?)',
+      `SELECT sr.id FROM suit_rentals sr
+       JOIN suit_inventory si ON sr.inventory_id = si.id
+       WHERE si.product_id = ? AND sr.rental_status IN (?, ?)`,
       [id, 'reserved', 'active']
     );
-    
+
     if (activeRentals.length > 0) {
       throw new AppError('Cannot delete suit with active rentals', 400);
     }
-    
-    await db.query('DELETE FROM suits WHERE id = ?', [id]);
-    
+
+    // CASCADE on suit_inventory FK will remove inventory rows automatically
+    await db.query('DELETE FROM suit_products WHERE id = ?', [id]);
+
     res.json({
       success: true,
       message: 'Suit deleted successfully'

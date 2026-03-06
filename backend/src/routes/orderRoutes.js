@@ -16,9 +16,9 @@ import { validateLaundryOrder, validate } from '../middleware/validators.js';
 
 const router = express.Router();
 
-// Public/authenticated routes for order placement
-router.get('/cleaning-types', authenticate, getCleaningTypes);
-router.get('/service-times', authenticate, getServiceTimes);
+// Public catalog routes (no auth needed - read-only)
+router.get('/cleaning-types', getCleaningTypes);
+router.get('/service-times', getServiceTimes);
 
 // Customer routes
 router.get('/my-orders', authenticate, authorize('customer'), getMyOrders);

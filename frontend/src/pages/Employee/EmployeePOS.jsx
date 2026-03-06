@@ -373,12 +373,12 @@ const EmployeePOS = () => {
               <div style={{
                 width: '56px',
                 height: '56px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                background: '#059669',
                 borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)'
               }}>
                 <ShoppingOutlined style={{ fontSize: '28px', color: 'white' }} />
               </div>
@@ -486,7 +486,7 @@ const EmployeePOS = () => {
                     disabled={!selectedCustomer}
                     onClick={() => setCurrentStep(1)}
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      background: '#059669',
                       border: 'none',
                       height: '48px',
                       fontSize: '16px'
@@ -522,8 +522,8 @@ const EmployeePOS = () => {
                     title="Selected Customer" 
                     style={{ 
                       borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                      borderColor: '#10b981'
+                      background: '#f0fdf4',
+                      borderColor: '#059669'
                     }}
                   >
                     <div style={{ textAlign: 'center', marginBottom: '16px' }}>
@@ -531,7 +531,7 @@ const EmployeePOS = () => {
                         width: '80px',
                         height: '80px',
                         borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        background: '#059669',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -742,7 +742,7 @@ const EmployeePOS = () => {
                     type="primary" 
                     htmlType="submit" 
                     loading={loading}
-                    style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
+                    style={{ background: '#059669', border: 'none' }}
                   >
                     Register
                   </Button>
@@ -924,7 +924,7 @@ const LaundryOrderForm = ({ form, cleaningTypes, serviceTimes, itemCategories, i
                 htmlType="submit"
                 loading={loading}
                 disabled={totalItems === 0}
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
+                style={{ background: '#059669', border: 'none' }}
               >
                 Create Order & Continue →
               </Button>
@@ -1062,7 +1062,7 @@ const RentalForm = ({ form, suitProducts, selectedSuit, selectedCustomer, rental
                 htmlType="submit"
                 loading={loading}
                 disabled={!selectedSuit}
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
+                style={{ background: '#059669', border: 'none' }}
               >
                 Create Rental & Continue →
               </Button>
@@ -1111,7 +1111,7 @@ const PaymentForm = ({ paymentForm, customer, order, rental, cleaningType, servi
                 htmlType="submit"
                 loading={loading}
                 icon={<CheckCircleOutlined />}
-                style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
+                style={{ background: '#059669', border: 'none' }}
               >
                 Complete Payment (LKR {amount.toFixed(2)})
               </Button>
@@ -1140,7 +1140,7 @@ const PaymentForm = ({ paymentForm, customer, order, rental, cleaningType, servi
 
           <Divider />
 
-          <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
+          <div style={{ background: '#059669', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
             <div style={{ fontSize: '14px', opacity: 0.9 }}>Amount Due</div>
             <div style={{ fontSize: '36px', fontWeight: 'bold', margin: '8px 0' }}>LKR {amount.toFixed(2)}</div>
           </div>
@@ -1225,7 +1225,7 @@ const Receipt = ({ data, paymentMethod, onPrint, onNewOrder }) => {
           size="large" 
           icon={<PlusOutlined />}
           onClick={onNewOrder}
-          style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none' }}
+          style={{ background: '#059669', border: 'none' }}
         >
           New Transaction
         </Button>

@@ -283,9 +283,9 @@ const InventoryManagement = () => {
                 height: '48px',
                 fontSize: '15px',
                 fontWeight: '500',
-                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                background: '#0ea5e9',
                 border: 'none',
-                boxShadow: '0 4px 12px rgba(79, 172, 254, 0.3)'
+                boxShadow: '0 2px 8px rgba(14,165,233,0.25)'
               }}
             >
               Add New Suit

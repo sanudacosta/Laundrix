@@ -81,19 +81,11 @@ const AppRoutes = () => {
       />
       <Route
         path="/customer/place-order"
-        element={
-          <ProtectedRoute roles={['customer']}>
-            <PlaceOrder />
-          </ProtectedRoute>
-        }
+        element={<PlaceOrder />}
       />
       <Route
         path="/customer/browse-suits"
-        element={
-          <ProtectedRoute roles={['customer']}>
-            <BrowseSuits />
-          </ProtectedRoute>
-        }
+        element={<BrowseSuits />}
       />
       <Route
         path="/customer/cart"

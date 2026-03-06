@@ -76,117 +76,116 @@ const AdminLayout = ({ children }) => {
         breakpoint="lg"
         collapsedWidth="80"
         style={{
-          overflow: 'auto',
+          overflow: 'hidden',
           height: '100vh',
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
-          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
+          background: '#0f172a',
+          boxShadow: '1px 0 0 rgba(255,255,255,0.06)'
         }}
       >
-        {/* Logo Section */}
-        <div style={{ 
-          padding: collapsed ? '20px 16px' : '24px', 
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px'
-        }}>
-          <div style={{
-            width: collapsed ? '40px' : '48px',
-            height: collapsed ? '40px' : '48px',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            borderRadius: '12px',
+        {/* Flex column wrapper fills the full sider height */}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+          {/* Logo Section */}
+          <div style={{ 
+            padding: collapsed ? '20px 16px' : '24px', 
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+            gap: '12px',
+            flexShrink: 0
           }}>
-            <CrownOutlined style={{ fontSize: collapsed ? '20px' : '24px', color: 'white' }} />
-          </div>
-          {!collapsed && (
-            <div>
-              <div style={{ 
-                color: 'white', 
-                fontSize: '18px', 
-                fontWeight: '700',
-                letterSpacing: '0.5px',
-                lineHeight: '1.2'
-              }}>
-                Laundrix
-              </div>
-              <div style={{ 
-                color: 'rgba(255,255,255,0.6)', 
-                fontSize: '11px',
-                fontWeight: '500',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                Admin Panel
-              </div>
+            <div style={{
+              width: collapsed ? '40px' : '48px',
+              height: collapsed ? '40px' : '48px',
+              background: '#4f46e5',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(79,70,229,0.3)'
+            }}>
+              <CrownOutlined style={{ fontSize: collapsed ? '20px' : '24px', color: 'white' }} />
             </div>
-          )}
-        </div>
-
-        {/* Menu */}
-        <Menu 
-          theme="dark" 
-          mode="inline" 
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          style={{ 
-            background: 'transparent',
-            border: 'none',
-            padding: '16px 8px'
-          }}
-          className="modern-menu"
-        />
-
-        {/* User Section */}
-        {!collapsed && (
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '20px',
-            borderTop: '1px solid rgba(255,255,255,0.08)',
-            background: 'rgba(0,0,0,0.2)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Avatar 
-                style={{ 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  flexShrink: 0
-                }} 
-                size={40}
-              >
-                {user?.full_name?.charAt(0) || 'A'}
-              </Avatar>
-              <div style={{ flex: 1, minWidth: 0 }}>
+            {!collapsed && (
+              <div>
                 <div style={{ 
                   color: 'white', 
-                  fontSize: '13px', 
-                  fontWeight: '600',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
+                  fontSize: '18px', 
+                  fontWeight: '700',
+                  letterSpacing: '0.5px',
+                  lineHeight: '1.2'
                 }}>
-                  {user?.full_name || 'Admin'}
+                  Laundrix
                 </div>
                 <div style={{ 
                   color: 'rgba(255,255,255,0.6)', 
-                  fontSize: '11px'
+                  fontSize: '11px',
+                  fontWeight: '500',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
                 }}>
-                  Administrator
+                  Admin Panel
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Scrollable Menu */}
+          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }} className="admin-menu-scroll">
+            <Menu 
+              theme="dark" 
+              mode="inline" 
+              selectedKeys={[location.pathname]}
+              items={menuItems}
+              style={{ 
+                background: 'transparent',
+                border: 'none',
+                padding: '12px 8px'
+              }}
+              className="modern-menu"
+            />
+          </div>
+
+          {/* User Section — always visible at bottom */}
+          <div style={{
+            padding: collapsed ? '16px 12px' : '16px 20px',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(0,0,0,0.2)',
+            flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Avatar 
+                style={{ background: '#4f46e5', flexShrink: 0 }} 
+                size={36}
+              >
+                {user?.full_name?.charAt(0)?.toUpperCase() || 'A'}
+              </Avatar>
+              {!collapsed && (
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ 
+                    color: 'white', 
+                    fontSize: '13px', 
+                    fontWeight: '600',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {user?.full_name || 'Admin'}
+                  </div>
+                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>
+                    Administrator
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
+
+        </div>
 
         <style>{`
           .modern-menu .ant-menu-item {
@@ -200,12 +199,22 @@ const AdminLayout = ({ children }) => {
             background: rgba(255,255,255,0.08) !important;
           }
           .modern-menu .ant-menu-item-selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+            background: rgba(79, 70, 229, 0.15) !important;
+            border-left: 3px solid #4f46e5 !important;
+            color: #818cf8 !important;
+          }
+          .modern-menu .ant-menu-item-selected .ant-menu-title-content a {
+            color: #a5b4fc !important;
+          }
+          .modern-menu .ant-menu-item-selected .anticon {
+            color: #818cf8 !important;
           }
           .modern-menu .ant-menu-item-selected::after {
             display: none !important;
           }
+          .admin-menu-scroll::-webkit-scrollbar { width: 3px; }
+          .admin-menu-scroll::-webkit-scrollbar-track { background: transparent; }
+          .admin-menu-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
         `}</style>
       </Sider>
       <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
@@ -242,24 +251,17 @@ const AdminLayout = ({ children }) => {
               onClick={logout} 
               style={{ 
                 padding: '8px 24px', 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: '#4f46e5',
                 color: 'white', 
                 border: 'none', 
                 borderRadius: '8px', 
                 cursor: 'pointer',
                 fontWeight: '500',
                 fontSize: '14px',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                boxShadow: '0 2px 4px rgba(102, 126, 234, 0.3)'
+                transition: 'background 0.2s'
               }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(102, 126, 234, 0.3)';
-              }}
+              onMouseEnter={(e) => { e.target.style.background = '#4338ca'; }}
+              onMouseLeave={(e) => { e.target.style.background = '#4f46e5'; }}
             >
               Logout
             </button>
@@ -268,7 +270,7 @@ const AdminLayout = ({ children }) => {
         <Content style={{ 
           margin: '24px 16px',
           padding: 0,
-          background: '#f7f8fc',
+          background: '#f1f5f9',
           minHeight: 'calc(100vh - 112px)'
         }}>
           {children}

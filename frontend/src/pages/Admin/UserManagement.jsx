@@ -256,9 +256,9 @@ const UserManagement = () => {
                 height: '48px',
                 fontSize: '15px',
                 fontWeight: '500',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: '#4f46e5',
                 border: 'none',
-                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                boxShadow: '0 2px 8px rgba(79,70,229,0.25)'
               }}
             >
               Add New User

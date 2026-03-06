@@ -566,7 +566,7 @@ const AdminDashboard = () => {
               borderRadius: '16px',
               border: 'none',
               boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              background: '#4f46e5'
             }}
             styles={{ body: { padding: '24px' } }}
           >

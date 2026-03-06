@@ -94,6 +94,11 @@ export const reportAPI = {
   getInventoryReport: () => api.get('/reports/inventory'),
   getOrderStatistics: (params) => api.get('/reports/orders', { params }),
   getRentalStatistics: (params) => api.get('/reports/rentals', { params }),
+  // CSV Export — returns blob for download
+  exportRevenue: (params) => api.get('/reports/export/revenue', { params, responseType: 'blob' }),
+  exportOrders: (params) => api.get('/reports/export/orders', { params, responseType: 'blob' }),
+  exportRentals: (params) => api.get('/reports/export/rentals', { params, responseType: 'blob' }),
+  exportInventory: () => api.get('/reports/export/inventory', { responseType: 'blob' }),
 };
 
 export default {
