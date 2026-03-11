@@ -755,13 +755,17 @@ const EmployeePOS = () => {
 
       <style>{`
         @media print {
-          body * { visibility: hidden; }
-          #receipt, #receipt * { visibility: visible; }
+          @page { margin: 8mm; size: A4; }
+          body * { visibility: hidden !important; }
+          #receipt, #receipt * { visibility: visible !important; }
           #receipt {
-            position: absolute;
+            position: fixed;
             left: 0;
             top: 0;
             width: 100%;
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
           }
         }
       `}</style>
@@ -944,13 +948,13 @@ const RentalForm = ({ form, suitProducts, selectedSuit, selectedCustomer, rental
         <Col xs={24} lg={16}>
           <Card title="Rental Details" style={{ marginBottom: '16px', borderRadius: '16px' }}>
             <Form.Item label="Select Suit" name="product_id" rules={[{ required: true }]}>
-              <Select size="large" placeholder="Choose a suit" onChange={onSuitSelect}>
+              <Select size="large" placeholder="Choose a suit" onChange={onSuitSelect} optionLabelProp="label">
                 {suitProducts.map(suit => (
-                  <Option key={suit.id} value={suit.id}>
-                    <div>
-                      <strong>{suit.name}</strong> - {suit.brand}
-                      <div style={{ fontSize: '12px', color: '#666' }}>
-                        LKR {parseFloat(suit.rental_price_per_day).toFixed(2)}/day | Deposit: LKR {parseFloat(suit.deposit_amount).toFixed(2)}
+                  <Option key={suit.id} value={suit.id} label={`${suit.name} — ${suit.brand}`}>
+                    <div style={{ lineHeight: '1.4' }}>
+                      <div><strong>{suit.name}</strong> <span style={{ color: '#888', fontWeight: 400 }}>— {suit.brand}</span></div>
+                      <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                        LKR {parseFloat(suit.rental_price_per_day).toFixed(2)}/day &nbsp;|&nbsp; Deposit: LKR {parseFloat(suit.deposit_amount).toFixed(2)}
                       </div>
                     </div>
                   </Option>
@@ -1152,69 +1156,87 @@ const PaymentForm = ({ paymentForm, customer, order, rental, cleaningType, servi
 
 // Receipt Component
 const Receipt = ({ data, paymentMethod, onPrint, onNewOrder }) => {
+  const tdLabel = { padding: '6px 10px', fontWeight: 600, color: '#555', whiteSpace: 'nowrap', width: '120px', border: '1px solid #e5e7eb', background: '#f9fafb', verticalAlign: 'top' };
+  const tdValue = { padding: '6px 10px', color: '#111', wordBreak: 'break-word', border: '1px solid #e5e7eb', verticalAlign: 'top' };
   return (
     <Card title={<span><CheckCircleOutlined style={{ color: '#10b981' }} /> Transaction Complete</span>} style={{ borderRadius: '16px' }}>
-      <div id="receipt" style={{ background: 'white', padding: '40px', borderRadius: '8px', border: '2px dashed #d9d9d9', marginBottom: '24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <Title level={2} style={{ margin: 0, color: '#10b981' }}>LAUNDRIX</Title>
-          <Text type="secondary">Professional Laundry & Rental Services</Text>
-          <Divider style={{ margin: '16px 0' }} />
-          <Title level={4}>{data.type === 'laundry' ? 'ORDER' : 'RENTAL'} RECEIPT</Title>
+      <div id="receipt" style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '2px dashed #d9d9d9', marginBottom: '24px', maxWidth: '680px', margin: '0 auto 24px' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#10b981', letterSpacing: '2px' }}>LAUNDRIX</div>
+          <div style={{ fontSize: '13px', color: '#888' }}>Professional Laundry &amp; Rental Services</div>
+          <hr style={{ margin: '12px 0', borderColor: '#e5e7eb' }} />
+          <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '1px' }}>
+            {data.type === 'laundry' ? 'ORDER' : 'RENTAL'} RECEIPT
+          </div>
         </div>
 
-        <Row gutter={24} style={{ marginBottom: '24px' }}>
-          <Col span={12}>
-            <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label={data.type === 'laundry' ? 'Order Number' : 'Rental Number'}>
-                <Text strong>{data.order?.orderNumber || data.rental?.rentalNumber || 'N/A'}</Text>
-              </Descriptions.Item>
-              <Descriptions.Item label="Date">{new Date().toLocaleString()}</Descriptions.Item>
-              <Descriptions.Item label="Payment">{paymentMethod.toUpperCase()}</Descriptions.Item>
-            </Descriptions>
-          </Col>
-          <Col span={12}>
-            <Descriptions column={1} size="small" bordered>
-              <Descriptions.Item label="Customer">{data.customer.full_name}</Descriptions.Item>
-              <Descriptions.Item label="Phone">{data.customer.phone}</Descriptions.Item>
-              <Descriptions.Item label="Email">{data.customer.email}</Descriptions.Item>
-            </Descriptions>
-          </Col>
-        </Row>
+        {/* Info table — single full-width table, no nested columns */}
+        <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '12px', fontSize: '13px' }}>
+          <colgroup>
+            <col style={{ width: '120px' }} />
+            <col />
+            <col style={{ width: '100px' }} />
+            <col />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td style={tdLabel}>{data.type === 'laundry' ? 'Order No.' : 'Rental No.'}</td>
+              <td style={{ ...tdValue, fontWeight: 700 }}>{data.order?.orderNumber || data.rental?.rentalNumber || 'N/A'}</td>
+              <td style={tdLabel}>Customer</td>
+              <td style={tdValue}>{data.customer.full_name}</td>
+            </tr>
+            <tr>
+              <td style={tdLabel}>Date</td>
+              <td style={tdValue}>{new Date().toLocaleString()}</td>
+              <td style={tdLabel}>Phone</td>
+              <td style={tdValue}>{data.customer.phone}</td>
+            </tr>
+            <tr>
+              <td style={tdLabel}>Payment</td>
+              <td style={tdValue}>{paymentMethod.toUpperCase()}</td>
+              <td style={tdLabel}>Email</td>
+              <td style={tdValue}>{data.customer.email}</td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div style={{ background: '#f9fafb', padding: '20px', borderRadius: '8px', marginBottom: '24px' }}>
-          {data.type === 'laundry' ? (
-            <>
-              <Row justify="space-between" style={{ marginBottom: '8px' }}>
-                <Text>Subtotal:</Text>
-                <Text>LKR {data.calculation.subtotal}</Text>
-              </Row>
-              <Row justify="space-between" style={{ marginBottom: '8px' }}>
-                <Text>Tax (8%):</Text>
-                <Text>LKR {data.calculation.tax}</Text>
-              </Row>
-            </>
-          ) : (
-            <>
-              <Row justify="space-between" style={{ marginBottom: '8px' }}>
-                <Text>Rental Amount:</Text>
-                <Text>LKR {data.calculation.rental}</Text>
-              </Row>
-              <Row justify="space-between" style={{ marginBottom: '8px' }}>
-                <Text>Security Deposit:</Text>
-                <Text>LKR {data.calculation.deposit}</Text>
-              </Row>
-            </>
-          )}
-          <Divider style={{ margin: '12px 0' }} />
-          <Row justify="space-between">
-            <Text strong style={{ fontSize: '18px' }}>Total Paid:</Text>
-            <Text strong style={{ fontSize: '24px', color: '#10b981' }}>LKR {data.calculation.total}</Text>
-          </Row>
-        </div>
+        {/* Totals table */}
+        <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <tbody>
+            {data.type === 'laundry' ? (
+              <>
+                <tr>
+                  <td style={{ padding: '6px 10px', color: '#555', border: '1px solid #e5e7eb' }}>Subtotal</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', border: '1px solid #e5e7eb' }}>LKR {data.calculation.subtotal}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '6px 10px', color: '#555', border: '1px solid #e5e7eb' }}>Tax (8%)</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', border: '1px solid #e5e7eb' }}>LKR {data.calculation.tax}</td>
+                </tr>
+              </>
+            ) : (
+              <>
+                <tr>
+                  <td style={{ padding: '6px 10px', color: '#555', border: '1px solid #e5e7eb' }}>Rental Amount</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', border: '1px solid #e5e7eb' }}>LKR {data.calculation.rental}</td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '6px 10px', color: '#555', border: '1px solid #e5e7eb' }}>Security Deposit</td>
+                  <td style={{ padding: '6px 10px', textAlign: 'right', border: '1px solid #e5e7eb' }}>LKR {data.calculation.deposit}</td>
+                </tr>
+              </>
+            )}
+            <tr style={{ background: '#f0fdf4' }}>
+              <td style={{ padding: '10px', fontWeight: 700, fontSize: '15px', border: '1px solid #e5e7eb' }}>Total Paid</td>
+              <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, fontSize: '18px', color: '#10b981', border: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>LKR {data.calculation.total}</td>
+            </tr>
+          </tbody>
+        </table>
 
-        <div style={{ textAlign: 'center', marginTop: '32px' }}>
-          <Text type="secondary" style={{ display: 'block' }}>Thank you for choosing Laundrix!</Text>
-          <Text type="secondary" style={{ fontSize: '12px' }}>Please keep this receipt for tracking</Text>
+        <div style={{ textAlign: 'center', marginTop: '16px', color: '#888', fontSize: '12px' }}>
+          <div>Thank you for choosing Laundrix!</div>
+          <div>Please keep this receipt for tracking</div>
         </div>
       </div>
 
