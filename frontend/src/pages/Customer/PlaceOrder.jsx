@@ -256,34 +256,35 @@ const PlaceOrder = () => {
     };
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!isAuthenticated) {
       toast.info('Please log in to place an order');
       navigate('/login', { state: { redirect: '/customer/place-order' } });
       return;
     }
+    const finalItemDescription = buildItemDescription();
+    if (!finalItemDescription) {
+      toast.error('Please select at least one item type');
+      return;
+    }
+    // Pre-compute the price so step 4 shows the correct total immediately
+    const price = calculatePrice();
+    setOrderTotal(price.total);
+    setStep(4);
+  };
+
+  const handlePayment = async () => {
     try {
-      setLoading(true);
-      const price = calculatePrice();
-      
-      // Build item description from selections
+      setPaymentLoading(true);
+
+      // 1. Create the order now (after payment method is chosen)
       const finalItemDescription = buildItemDescription();
-      
-      if (!finalItemDescription) {
-        toast.error('Please select at least one item type');
-        setLoading(false);
-        return;
-      }
-      
-      // Combine pickup date and time into ISO format
       const pickupDateTime = `${orderData.pickup_date}T${orderData.pickup_time}:00`;
-      
-      // Prepare data in backend expected format
       const orderPayload = {
         cleaning_type_id: parseInt(orderData.cleaning_type_id),
         service_time_id: parseInt(orderData.service_time_id),
         item_description: finalItemDescription,
-        quantity: parseInt(orderData.quantity) || 1,
+        quantity: 1,
         weight_kg: parseFloat(orderData.weight_kg),
         pickup_address: orderData.pickup_address,
         delivery_address: orderData.delivery_address,
@@ -291,38 +292,22 @@ const PlaceOrder = () => {
         order_type: 'online',
         pickup_date: pickupDateTime
       };
-      
-      console.log('Sending order payload:', orderPayload);
-      
-      const response = await orderAPI.createOrder(orderPayload);
-      
-      const orderId = response?.data?.data?.orderId;
-      const total = response?.data?.data?.totalAmount || calculatePrice().total;
+      const orderRes = await orderAPI.createOrder(orderPayload);
+      const orderId = orderRes?.data?.data?.orderId;
+      const confirmedTotal = orderRes?.data?.data?.totalAmount || parseFloat(orderTotal);
       setCreatedOrderId(orderId);
-      setOrderTotal(total);
-      toast.success('Order placed! Order #' + (response?.data?.data?.orderNumber || '') + ' — please complete payment.');
-      setStep(4);
-    } catch (error) {
-      console.error('Error placing order:', error);
-      console.error('Error response:', error.response?.data);
-      toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to place order');
-    } finally {
-      setLoading(false);
-    }
-  };
+      setOrderTotal(confirmedTotal);
 
-  const handlePayment = async () => {
-    try {
-      setPaymentLoading(true);
-      const price = calculatePrice();
+      // 2. Create the payment record
       await paymentAPI.createPayment({
-        order_id: createdOrderId,
+        order_id: orderId,
         payment_type: 'laundry',
         payment_method: paymentMethod,
-        amount: parseFloat(orderTotal || price.total),
+        amount: confirmedTotal,
         payment_status: paymentMethod === 'cash' ? 'pending' : 'completed',
         ...(paymentMethod === 'card' ? { card_details: cardDetails } : {})
       });
+
       if (paymentMethod === 'cash') {
         toast.success('Order confirmed! Pay cash on delivery.');
       } else {
@@ -330,7 +315,7 @@ const PlaceOrder = () => {
       }
       navigate('/customer/my-orders');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Payment failed. Please try again.');
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to place order. Please try again.');
     } finally {
       setPaymentLoading(false);
     }
@@ -355,6 +340,19 @@ const PlaceOrder = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+
+      {/* Full-page loading overlay */}
+      {paymentLoading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-xl border border-gray-200 shadow-lg">
+            <div className="w-12 h-12 border-4 border-solid border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-semibold text-gray-800">
+              {paymentMethod === 'cash' ? 'Confirming your order...' : 'Processing payment...'}
+            </p>
+            <p className="text-xs text-gray-400">Please do not close this page</p>
+          </div>
+        </div>
+      )}
 
       {/* Page header */}
       <div className="bg-white border-b border-gray-100 pt-20">
@@ -774,22 +772,18 @@ const PlaceOrder = () => {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(2)}
-                disabled={loading}
-                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={loading || !orderData.pickup_address || !orderData.delivery_address}
+                disabled={!orderData.pickup_address || !orderData.delivery_address}
                 className="flex-1 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                {loading
-                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <CheckCircle className="w-4 h-4" />
-                }
-                {loading ? 'Processing...' : 'Continue to Payment'}
+                <ChevronRight className="w-4 h-4" />
+                Continue to Payment
               </button>
             </div>
           </div>

@@ -201,8 +201,8 @@ export const createOrder = async (req, res, next) => {
     const multiplier = serviceTimes[0].price_multiplier;
     const durationHours = serviceTimes[0].duration_hours;
     
-    // Calculate pricing
-    const subtotal = basePrice * quantity * multiplier;
+    // Calculate pricing (price per kg × weight × service multiplier)
+    const subtotal = parseFloat(basePrice) * parseFloat(weight_kg || 1) * parseFloat(multiplier);
     const tax = subtotal * 0.08; // 8% tax
     const totalAmount = subtotal + tax;
     
