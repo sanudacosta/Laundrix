@@ -20,6 +20,7 @@ const RegisterPage = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successOverlay, setSuccessOverlay] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [emailValid, setEmailValid] = useState(null);
@@ -120,7 +121,8 @@ const RegisterPage = () => {
     const result = await register(registerData);
 
     if (result.success) {
-      navigate('/customer/dashboard');
+      setSuccessOverlay(true);
+      setTimeout(() => navigate('/customer/dashboard'), 2000);
     } else {
       setError(result.message);
       setShake(true);
@@ -131,6 +133,19 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen flex">
+      {/* Success overlay */}
+      {successOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle className="w-9 h-9 text-green-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Account Created!</h2>
+            <p className="text-sm text-gray-500">Redirecting you to your dashboard...</p>
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mt-2" />
+          </div>
+        </div>
+      )}
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 items-start justify-center p-12 animate-fade-in overflow-y-auto">
         <div className="max-w-md text-white my-12">

@@ -385,6 +385,11 @@ export const checkout = async (req, res, next) => {
     await connection.query('DELETE FROM rental_cart WHERE customer_id = ?', [customerId]);
     
     await connection.commit();
+
+    // Send confirmation notification for each rental
+    for (const rental of rentals) {
+      await sendRentalNotification(rental.id, 'reserved', customerId);
+    }
     
     res.status(201).json({
       success: true,
@@ -478,6 +483,8 @@ export const createRental = async (req, res, next) => {
        rentalAmount, depositAmount, totalAmount, occasion, delivery_address, special_instructions]
     );
     
+    await sendRentalNotification(result.insertId, 'reserved', customerId);
+
     res.status(201).json({
       success: true,
       message: 'Rental created successfully',

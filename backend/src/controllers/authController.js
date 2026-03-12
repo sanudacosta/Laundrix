@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import db from '../config/database.js';
 import { generateToken } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { sendEmail, emailTemplates } from '../services/emailService.js';
 
 // Register new user
 export const register = async (req, res, next) => {
@@ -26,6 +27,13 @@ export const register = async (req, res, next) => {
     );
 
     const userId = result.insertId;
+
+    // Send welcome email (non-blocking)
+    sendEmail(
+      email,
+      'Welcome to Laundrix',
+      emailTemplates.welcome(full_name)
+    ).catch(err => console.error('Welcome email failed:', err.message));
 
     // Generate token
     const token = generateToken(userId, role);

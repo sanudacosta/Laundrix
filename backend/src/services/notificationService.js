@@ -18,9 +18,9 @@ export const createNotification = async (notificationData) => {
 
     const [result] = await db.query(
       `INSERT INTO notifications 
-       (user_id, type, title, message, send_email, send_sms, related_order_id, related_rental_id) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, type, title, message, shouldSendEmail, shouldSendSms, relatedOrderId, relatedRentalId]
+       (user_id, type, title, message) 
+       VALUES (?, ?, ?, ?)`,
+      [userId, type, title, message]
     );
 
     const notificationId = result.insertId;
@@ -40,36 +40,45 @@ export const createNotification = async (notificationData) => {
     // Send email if requested
     if (shouldSendEmail && user.email) {
       const emailHtml = `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
-          <h2 style="color: #1890ff;">${title}</h2>
-          <p>${message}</p>
-          <hr style="margin: 20px 0;">
-          <p style="font-size: 12px; color: #666;">
-            This is an automated message from Laundrix.
-          </p>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background-color:#f4f5f7;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;">
+        <tr><td style="background-color:#1e3a5f;padding:24px 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td><span style="font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">LAUNDRIX</span></td>
+            <td align="right"><span style="font-size:12px;color:#94b4d4;letter-spacing:0.5px;text-transform:uppercase;">Professional Laundry Services</span></td>
+          </tr></table>
+        </td></tr>
+        <tr><td style="padding:36px 32px 28px;">
+          <h2 style="margin:0 0 20px;font-size:20px;font-weight:700;color:#1e3a5f;">${title}</h2>
+          <p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">Dear ${user.full_name},</p>
+          <p style="margin:0 0 16px;font-size:14px;color:#374151;line-height:1.6;">${message}</p>
+        </td></tr>
+        <tr><td style="padding:0 32px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;"/></td></tr>
+        <tr><td style="background-color:#f8fafc;padding:20px 32px;">
+          <p style="margin:0 0 4px;font-size:12px;color:#64748b;">This is an automated message from Laundrix. Please do not reply to this email.</p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;">Questions? Contact us at support@laundrix.com</p>
+        </td></tr>
+      </table>
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-top:16px;">
+        <tr><td style="text-align:center;font-size:11px;color:#94a3b8;padding:0 16px;">&copy; ${new Date().getFullYear()} Laundrix. All rights reserved.</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
       `;
       
-      const emailResult = await sendEmail(user.email, title, emailHtml);
-      
-      if (emailResult.success) {
-        await db.query(
-          'UPDATE notifications SET email_sent = TRUE WHERE id = ?',
-          [notificationId]
-        );
-      }
+      await sendEmail(user.email, title, emailHtml);
     }
 
     // Send SMS if requested
     if (shouldSendSms && user.phone) {
-      const smsResult = await sendSMS(user.phone, `${title}: ${message}`);
-      
-      if (smsResult.success) {
-        await db.query(
-          'UPDATE notifications SET sms_sent = TRUE WHERE id = ?',
-          [notificationId]
-        );
-      }
+      await sendSMS(user.phone, `${title}: ${message}`);
     }
 
     return {

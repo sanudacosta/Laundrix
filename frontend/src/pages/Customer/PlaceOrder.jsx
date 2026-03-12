@@ -2,8 +2,8 @@
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
-import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle, Minus } from 'lucide-react';
-import { orderAPI } from '../../services/apiService';
+import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle, Minus, CreditCard, Banknote, Lock } from 'lucide-react';
+import { orderAPI, paymentAPI } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 
 const PlaceOrder = () => {
@@ -18,11 +18,17 @@ const PlaceOrder = () => {
   const [customItems, setCustomItems] = useState('');
   const [sameAddress, setSameAddress] = useState(false);
   const [deliveryAdjusted, setDeliveryAdjusted] = useState(null); // null or adjusted date string
+  const [createdOrderId, setCreatedOrderId] = useState(null);
+  const [orderTotal, setOrderTotal] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [cardDetails, setCardDetails] = useState({ cardName: '', cardNumber: '', expiry: '', cvv: '' });
+  const [paymentLoading, setPaymentLoading] = useState(false);
   
   const steps = [
     { number: 1, title: 'Service & Items', icon: ShoppingBag, description: 'Choose service type and items' },
     { number: 2, title: 'Schedule', icon: Calendar, description: 'Pick pickup time' },
-    { number: 3, title: 'Confirm', icon: CheckCircle, description: 'Review and submit' }
+    { number: 3, title: 'Confirm', icon: CheckCircle, description: 'Review and submit' },
+    { number: 4, title: 'Payment', icon: CreditCard, description: 'Complete your payment' }
   ];
   
   const itemCategories = [
@@ -290,36 +296,43 @@ const PlaceOrder = () => {
       
       const response = await orderAPI.createOrder(orderPayload);
       
-      toast.success('Order placed successfully! Order Number: ' + (response?.data?.data?.orderNumber || ''), {
-        autoClose: 5000,
-      });
-      // Reset form
-      setStep(1);
-      setSelectedServiceDuration(0);
-      setItemCounts({});
-      setCustomItems('');
-      setSameAddress(false);
-      setOrderData({
-        cleaning_type_id: '',
-        service_time_id: '',
-        weight_kg: 1,
-        quantity: 1,
-        pickup_date: '',
-        pickup_time: '',
-        delivery_date: '',
-        delivery_time: '',
-        pickup_address: '',
-        delivery_address: '',
-        special_instructions: '',
-        detergent_preference: 'standard',
-        item_description: ''
-      });
+      const orderId = response?.data?.data?.orderId;
+      const total = response?.data?.data?.totalAmount || calculatePrice().total;
+      setCreatedOrderId(orderId);
+      setOrderTotal(total);
+      toast.success('Order placed! Order #' + (response?.data?.data?.orderNumber || '') + ' — please complete payment.');
+      setStep(4);
     } catch (error) {
       console.error('Error placing order:', error);
       console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.error || error.response?.data?.message || 'Failed to place order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      setPaymentLoading(true);
+      const price = calculatePrice();
+      await paymentAPI.createPayment({
+        order_id: createdOrderId,
+        payment_type: 'laundry',
+        payment_method: paymentMethod,
+        amount: parseFloat(orderTotal || price.total),
+        payment_status: paymentMethod === 'cash' ? 'pending' : 'completed',
+        ...(paymentMethod === 'card' ? { card_details: cardDetails } : {})
+      });
+      if (paymentMethod === 'cash') {
+        toast.success('Order confirmed! Pay cash on delivery.');
+      } else {
+        toast.success('Payment successful! Your order is confirmed.');
+      }
+      navigate('/customer/my-orders');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Payment failed. Please try again.');
+    } finally {
+      setPaymentLoading(false);
     }
   };
 
@@ -345,13 +358,13 @@ const PlaceOrder = () => {
 
       {/* Page header */}
       <div className="bg-white border-b border-gray-100 pt-20">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-3">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Laundry Order</h1>
           <p className="text-sm text-gray-500 mt-0.5">Schedule your pickup and delivery</p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
         {/* Step indicator */}
         <div className="flex items-center mb-4">
           {steps.map((s, index) => (
@@ -776,9 +789,127 @@ const PlaceOrder = () => {
                   ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   : <CheckCircle className="w-4 h-4" />
                 }
-                {loading ? 'Placing Order...' : 'Place Order'}
+                {loading ? 'Processing...' : 'Continue to Payment'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* -- STEP 4 -- */}
+        {step === 4 && (
+          <div className="space-y-3">
+            {/* Total recap */}
+            <div className="bg-blue-50 rounded-lg border border-blue-200 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-blue-600 font-medium">Order Total</p>
+                <p className="text-2xl font-bold text-blue-700">LKR {orderTotal || calculatePrice().total}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-blue-400" />
+            </div>
+
+            {/* Payment method */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Payment Method</h2>
+              <div className="grid grid-cols-2 gap-2">
+                <div
+                  onClick={() => setPaymentMethod('cash')}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col items-center gap-1.5 ${
+                    paymentMethod === 'cash' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <Banknote className={`w-6 h-6 ${paymentMethod === 'cash' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <p className="text-sm font-medium text-gray-800">Cash on Delivery</p>
+                  <p className="text-xs text-gray-400 text-center">Pay when items are delivered</p>
+                </div>
+                <div
+                  onClick={() => setPaymentMethod('card')}
+                  className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col items-center gap-1.5 ${
+                    paymentMethod === 'card' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <CreditCard className={`w-6 h-6 ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <p className="text-sm font-medium text-gray-800">Card</p>
+                  <p className="text-xs text-gray-400 text-center">Credit or Debit card</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card details */}
+            {paymentMethod === 'card' && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-gray-400" />
+                  <h3 className="text-sm font-semibold text-gray-900">Card Details</h3>
+                  <span className="ml-auto text-xs text-gray-400">Secured &amp; Encrypted</span>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">Cardholder Name</label>
+                  <input
+                    type="text"
+                    value={cardDetails.cardName}
+                    onChange={(e) => setCardDetails(prev => ({ ...prev, cardName: e.target.value }))}
+                    placeholder="Name on card"
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">Card Number</label>
+                  <input
+                    type="text"
+                    value={cardDetails.cardNumber}
+                    onChange={(e) => setCardDetails(prev => ({ ...prev, cardNumber: e.target.value.replace(/\D/g, '').slice(0, 16) }))}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={16}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-mono tracking-widest"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Expiry</label>
+                    <input
+                      type="text"
+                      value={cardDetails.expiry}
+                      onChange={(e) => {
+                        let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+                        if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2);
+                        setCardDetails(prev => ({ ...prev, expiry: v }));
+                      }}
+                      placeholder="MM/YY"
+                      maxLength={5}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">CVV</label>
+                    <input
+                      type="password"
+                      value={cardDetails.cvv}
+                      onChange={(e) => setCardDetails(prev => ({ ...prev, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) }))}
+                      placeholder="•••"
+                      maxLength={4}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handlePayment}
+              disabled={paymentLoading || (paymentMethod === 'card' && (!cardDetails.cardName || !cardDetails.cardNumber || !cardDetails.expiry || !cardDetails.cvv))}
+              className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {paymentLoading
+                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                : paymentMethod === 'card' ? <CreditCard className="w-4 h-4" /> : <Banknote className="w-4 h-4" />
+              }
+              {paymentLoading
+                ? 'Processing...'
+                : paymentMethod === 'card'
+                  ? `Pay LKR ${orderTotal || calculatePrice().total}`
+                  : 'Confirm Order (Cash on Delivery)'
+              }
+            </button>
           </div>
         )}
       </div>

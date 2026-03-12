@@ -32,15 +32,16 @@ export const createPayment = async (req, res, next) => {
       throw new AppError('Rental ID required for rental payment', 400);
     }
     
-    // Process payment (skip external processing for POS completed payments)
+    // Process payment (skip external processing for POS completed payments or cash)
     let paymentResult;
     const isCompletedPOSPayment = (userRole === 'employee' && payment_status === 'completed');
+    const isCashPayment = payment_method === 'cash';
     
-    if (isCompletedPOSPayment) {
-      // POS payment already collected - skip external processing
+    if (isCompletedPOSPayment || isCashPayment) {
+      // POS payment already collected, or cash on delivery — skip external processing
       paymentResult = {
         success: true,
-        transactionId: transaction_reference || `POS-${Date.now()}`
+        transactionId: transaction_reference || `${isCashPayment ? 'COD' : 'POS'}-${Date.now()}`
       };
     } else {
       // Process payment through payment gateway
