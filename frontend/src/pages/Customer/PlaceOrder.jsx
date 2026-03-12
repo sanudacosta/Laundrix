@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
-import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle, Minus, CreditCard, Banknote, Lock } from 'lucide-react';
+import { ShoppingBag, Calendar, Clock, MapPin, Package, ChevronRight, ChevronLeft, CheckCircle, Shirt, Sparkles, Truck, AlertCircle, Minus, CreditCard, Lock } from 'lucide-react';
 import { orderAPI, paymentAPI } from '../../services/apiService';
 import { useAuth } from '../../context/AuthContext';
 
@@ -20,7 +20,7 @@ const PlaceOrder = () => {
   const [deliveryAdjusted, setDeliveryAdjusted] = useState(null); // null or adjusted date string
   const [createdOrderId, setCreatedOrderId] = useState(null);
   const [orderTotal, setOrderTotal] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardDetails, setCardDetails] = useState({ cardName: '', cardNumber: '', expiry: '', cvv: '' });
   const [paymentLoading, setPaymentLoading] = useState(false);
   
@@ -347,7 +347,7 @@ const PlaceOrder = () => {
           <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-xl border border-gray-200 shadow-lg">
             <div className="w-12 h-12 border-4 border-solid border-blue-600 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-semibold text-gray-800">
-              {paymentMethod === 'cash' ? 'Confirming your order...' : 'Processing payment...'}
+              {'Processing payment...'}
             </p>
             <p className="text-xs text-gray-400">Please do not close this page</p>
           </div>
@@ -801,35 +801,7 @@ const PlaceOrder = () => {
               <CheckCircle className="w-8 h-8 text-blue-400" />
             </div>
 
-            {/* Payment method */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">Payment Method</h2>
-              <div className="grid grid-cols-2 gap-2">
-                <div
-                  onClick={() => setPaymentMethod('cash')}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col items-center gap-1.5 ${
-                    paymentMethod === 'cash' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Banknote className={`w-6 h-6 ${paymentMethod === 'cash' ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <p className="text-sm font-medium text-gray-800">Cash on Delivery</p>
-                  <p className="text-xs text-gray-400 text-center">Pay when items are delivered</p>
-                </div>
-                <div
-                  onClick={() => setPaymentMethod('card')}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all flex flex-col items-center gap-1.5 ${
-                    paymentMethod === 'card' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <CreditCard className={`w-6 h-6 ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <p className="text-sm font-medium text-gray-800">Card</p>
-                  <p className="text-xs text-gray-400 text-center">Credit or Debit card</p>
-                </div>
-              </div>
-            </div>
-
             {/* Card details */}
-            {paymentMethod === 'card' && (
               <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Lock className="w-3.5 h-3.5 text-gray-400" />
@@ -886,23 +858,17 @@ const PlaceOrder = () => {
                   </div>
                 </div>
               </div>
-            )}
 
             <button
               onClick={handlePayment}
-              disabled={paymentLoading || (paymentMethod === 'card' && (!cardDetails.cardName || !cardDetails.cardNumber || !cardDetails.expiry || !cardDetails.cvv))}
+              disabled={paymentLoading || !cardDetails.cardName || !cardDetails.cardNumber || !cardDetails.expiry || !cardDetails.cvv}
               className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {paymentLoading
-                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                : paymentMethod === 'card' ? <CreditCard className="w-4 h-4" /> : <Banknote className="w-4 h-4" />
+                ? <div className="w-4 h-4 border-2 border-solid border-white border-t-transparent rounded-full animate-spin" />
+                : <CreditCard className="w-4 h-4" />
               }
-              {paymentLoading
-                ? 'Processing...'
-                : paymentMethod === 'card'
-                  ? `Pay LKR ${orderTotal || calculatePrice().total}`
-                  : 'Confirm Order (Cash on Delivery)'
-              }
+              {paymentLoading ? 'Processing...' : `Pay LKR ${orderTotal || calculatePrice().total}`}
             </button>
           </div>
         )}
