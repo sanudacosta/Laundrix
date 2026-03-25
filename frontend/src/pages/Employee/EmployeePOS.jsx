@@ -83,6 +83,14 @@ const EmployeePOS = () => {
     }
   }, [selectedCleaningType, selectedServiceTime, itemCounts, selectedSuit, rentalDays]);
 
+  const watchedWeightKg = Form.useWatch('weight_kg', form);
+
+  useEffect(() => {
+    if (activeTab === 'laundry') {
+      calculateLaundryTotal();
+    }
+  }, [watchedWeightKg]);
+
   const fetchCustomers = async () => {
     try {
       const response = await adminAPI.getAllUsers({ role: 'customer' });
@@ -131,9 +139,15 @@ const EmployeePOS = () => {
       return;
     }
 
+    const weightValue = parseFloat(form.getFieldValue('weight_kg'));
+    if (!weightValue || Number.isNaN(weightValue) || weightValue <= 0) {
+      setOrderCalculation({ subtotal: 0, tax: 0, total: 0 });
+      return;
+    }
+
     const basePrice = parseFloat(selectedCleaningType.base_price);
     const multiplier = parseFloat(selectedServiceTime.price_multiplier);
-    const subtotal = basePrice * totalItems * multiplier;
+    const subtotal = basePrice * weightValue * multiplier;
     const tax = subtotal * 0.08;
     const total = subtotal + tax;
 
@@ -864,7 +878,7 @@ const LaundryOrderForm = ({ form, cleaningTypes, serviceTimes, itemCategories, i
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item label="Weight (kg)" name="weight_kg">
+                <Form.Item label="Weight (kg)" name="weight_kg" rules={[{ required: true, message: 'Please enter weight in kg' }]}>
                   <InputNumber min={0} step={0.5} size="large" style={{ width: '100%' }} placeholder="Optional" />
                 </Form.Item>
               </Col>
